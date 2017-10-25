@@ -1,4 +1,4 @@
-qtmultimedia-opensource-src (5.9.1-3ubuntu1) artful; urgency=low
+qtmultimedia-opensource-src (5.9.1+ubports) xenial; urgency=low
 
   * Merge from Debian Sid. Remaining change:
     - Install Qt5Quick_QSGVideoNodeFactory_EGL.cmake on arm64.
