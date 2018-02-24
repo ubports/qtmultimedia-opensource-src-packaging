@@ -17,7 +17,7 @@ pkgs_with_common = $(patsubst debian/%.install-common,%,$(wildcard debian/*.inst
 pkgs_with_arch = $(patsubst debian/%.install-$(DEB_HOST_ARCH),%,$(wildcard debian/*.install-$(DEB_HOST_ARCH)))
 
 %:
-	dh $@ --parallel
+	dh $@ --parallel --with pkgkde_symbolshelper
 
 override_dh_auto_configure:
 	qmake QT_BUILD_PARTS+=tests
@@ -26,10 +26,14 @@ override_dh_auto_build-indep:
 	dh_auto_build -Smakefile -- docs
 
 override_dh_auto_test-arch:
+ifeq ($(DEB_HOST_ARCH), armhf)
+# Don't run the tests on armhf, they're spotty.
+else
 	$(MAKE) install -Csrc/imports INSTALL_ROOT=$(CURDIR)/test_root
 	QT_LOGGING_RULES="default.debug=true" \
 		xvfb-run -a -s "-screen 0 1024x768x24 +extension RANDR +extension RENDER +extension GLX" \
 		dh_auto_test -- -Ctests/auto/unit QML2_IMPORT_PATH=$(CURDIR)/test_root/usr/lib/$(DEB_HOST_MULTIARCH)/qt5/qml
+endif
 
 # Do not attempt to run tests during indep build
 override_dh_auto_test-indep:
