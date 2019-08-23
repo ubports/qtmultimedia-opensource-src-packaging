@@ -1,8 +1,15 @@
-qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid1) UNRELEASED; urgency=medium
+qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid1) xenial; urgency=medium
 
-  * 
+  * Backport patches from Qt 5.14 required to use camerabin with gst-droid
+    - 0001-Gstreamer-Fix-crash-when-resolution-or-frame-rates-a.patch
+    - 0002-Gstreamer-Fix-gst_mini_object_unref-assertion-refcou.patch
+    - 0003-Gstreamer-Set-video-profile-to-CameraBin-before-GST_.patch
+    - 0004-Gstreamer-Negotiate-default-settings-before-encoding.patch
+  * d/control: add build-deps on libgstreamer-plugins-good1.0-dev.
+    This allows gstcamerabin plugin to use gstreamer's photography
+    interface, such as focusing.
 
- -- Ratchanan Srirattanamet <peathot@hotmail.com>  Fri, 23 Aug 2019 18:52:20 +0700
+ -- Ratchanan Srirattanamet <peathot@hotmail.com>  Fri, 23 Aug 2019 20:41:05 +0700
 
 qtmultimedia-opensource-src (5.9.5-0ubports1) xenial; urgency=medium
 
