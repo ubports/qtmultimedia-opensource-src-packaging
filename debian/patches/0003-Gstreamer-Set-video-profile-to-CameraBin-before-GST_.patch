@@ -1,0 +1,79 @@
+From c1ca9510af3c3c4134b717f1863651783e338a9e Mon Sep 17 00:00:00 2001
+From: VaL Doroshchuk <valentyn.doroshchuk@qt.io>
+Date: Wed, 22 Aug 2018 10:49:39 +0200
+Subject: [PATCH] Gstreamer: Set video-profile to CameraBin before
+ GST_STATE_READY
+
+CameraBin creates default (application/ogg, video/x-theora) video profile
+or sets custom defined one, but ONLY on GST_STATE_CHANGE_NULL_TO_READY.
+
+If the camera is already loaded then it is not possible to change the video profile.
+
+Since a video profile was never defined, video/x-theora was always used to record video.
+
+Moved setting video profile before it gets to READY.
+It fixes an issue with ignoring CameraBinRecorder::applySettings().
+This also changes previous behavior when video/x-theora was always used.
+
+To apply custom video settings it requires to use QMediaRecorder::setVideoSettings
+before the camera enters the READY state.
+
+Task-number: QTBUG-69895
+Change-Id: I3afbf1f8e7c953e2e49e9cad7e96ea0b18a29d1a
+Reviewed-by: Christian Stromme <christian.stromme@qt.io>
+---
+ src/gsttools/qgstcodecsinfo.cpp               |  2 +-
+ .../gstreamer/camerabin/camerabinsession.cpp  | 20 ++++++++++---------
+ 2 files changed, 12 insertions(+), 10 deletions(-)
+
+Index: qtmultimedia-opensource-src-packaging/src/gsttools/qgstcodecsinfo.cpp
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/gsttools/qgstcodecsinfo.cpp
++++ qtmultimedia-opensource-src-packaging/src/gsttools/qgstcodecsinfo.cpp
+@@ -106,7 +106,7 @@ void QGstCodecsInfo::updateCodecs(Elemen
+ 
+     QSet<QByteArray> fieldsToAdd;
+     fieldsToAdd << "mpegversion" << "layer" << "layout" << "raversion"
+-                << "wmaversion" << "wmvversion" << "variant";
++                << "wmaversion" << "wmvversion" << "variant" << "systemstream";
+ 
+     GList *element = elements;
+     while (element) {
+Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/plugins/gstreamer/camerabin/camerabinsession.cpp
++++ qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+@@ -781,6 +781,17 @@ void CameraBinSession::load()
+         return;
+     }
+ 
++#if QT_CONFIG(gstreamer_encodingprofiles)
++    GstEncodingContainerProfile *profile = m_recorderControl->videoProfile();
++    if (profile) {
++        g_object_set (G_OBJECT(m_camerabin),
++                      "video-profile",
++                      profile,
++                      NULL);
++        gst_encoding_profile_unref(profile);
++    }
++#endif
++
+     gst_element_set_state(m_camerabin, GST_STATE_READY);
+ }
+ 
+@@ -816,15 +827,6 @@ void CameraBinSession::start()
+ 
+     m_recorderControl->applySettings();
+ 
+-#if QT_CONFIG(gstreamer_encodingprofiles)
+-    GstEncodingContainerProfile *profile = m_recorderControl->videoProfile();
+-    g_object_set (G_OBJECT(m_camerabin),
+-                  "video-profile",
+-                  profile,
+-                  NULL);
+-    gst_encoding_profile_unref(profile);
+-#endif
+-
+     setAudioCaptureCaps();
+ 
+     setupCaptureResolution();

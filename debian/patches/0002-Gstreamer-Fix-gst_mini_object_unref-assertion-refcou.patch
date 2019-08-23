@@ -1,0 +1,27 @@
+From d84c7d09df16d5e60cd5067005ec97498f8b4e32 Mon Sep 17 00:00:00 2001
+From: VaL Doroshchuk <valentyn.doroshchuk@qt.io>
+Date: Wed, 22 Aug 2018 10:25:39 +0200
+Subject: [PATCH] Gstreamer: Fix gst_mini_object_unref: assertion refcount > 0
+ failed
+
+gst_value_get_sample does not return a reference to the sample.
+Should not call gst_sample_unref.
+
+Change-Id: Ibf71e6844b5756d85aac541a68e4e4ae4eefe498
+Reviewed-by: Christian Stromme <christian.stromme@qt.io>
+---
+ src/plugins/gstreamer/camerabin/camerabinsession.cpp | 1 -
+ 1 file changed, 1 deletion(-)
+
+Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/plugins/gstreamer/camerabin/camerabinsession.cpp
++++ qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+@@ -942,7 +942,6 @@ bool CameraBinSession::processSyncMessag
+             GstVideoInfo previewInfo;
+             if (gst_video_info_from_caps(&previewInfo, previewCaps))
+                 image = QGstUtils::bufferToImage(buffer, previewInfo);
+-            gst_sample_unref(sample);
+ #else
+             image = QGstUtils::bufferToImage(buffer);
+             gst_buffer_unref(buffer);

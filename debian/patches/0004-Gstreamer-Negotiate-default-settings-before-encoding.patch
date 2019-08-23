@@ -1,0 +1,37 @@
+From a29d83ff4bbab71fc2f8af77594a9aff997c2b2a Mon Sep 17 00:00:00 2001
+From: VaL Doroshchuk <valentyn.doroshchuk@qt.io>
+Date: Mon, 1 Oct 2018 15:48:41 +0200
+Subject: [PATCH] Gstreamer: Negotiate default settings before encoding
+ container profile
+
+In case if container format, video and audio codec are not provided,
+need to fetch default ones.
+
+Change-Id: I616fabc7bf9ec7c7a08a4c5dacad87a1748209f3
+Reviewed-by: Andy Shaw <andy.shaw@qt.io>
+---
+ src/plugins/gstreamer/camerabin/camerabinsession.cpp | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/plugins/gstreamer/camerabin/camerabinsession.cpp
++++ qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+@@ -781,6 +781,8 @@ void CameraBinSession::load()
+         return;
+     }
+ 
++    m_recorderControl->applySettings();
++
+ #if QT_CONFIG(gstreamer_encodingprofiles)
+     GstEncodingContainerProfile *profile = m_recorderControl->videoProfile();
+     if (profile) {
+@@ -825,8 +827,6 @@ void CameraBinSession::start()
+ 
+     setStatus(QCamera::StartingStatus);
+ 
+-    m_recorderControl->applySettings();
+-
+     setAudioCaptureCaps();
+ 
+     setupCaptureResolution();

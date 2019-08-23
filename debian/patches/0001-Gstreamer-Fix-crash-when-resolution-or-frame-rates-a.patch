@@ -1,0 +1,58 @@
+From 2af2d8359c835c1d9347c50b89b7c24658858d35 Mon Sep 17 00:00:00 2001
+From: VaL Doroshchuk <valentyn.doroshchuk@qt.io>
+Date: Fri, 17 Aug 2018 16:09:30 +0200
+Subject: [PATCH] Gstreamer: Fix crash when resolution or frame rates are
+ requested
+
+When either resolution or frame rates have been requested when
+the camera is in unloaded state, caps might not have some values.
+
+Change-Id: Ie935c62d02e10f762957ecd9f89255ad0e8fbd0b
+Reviewed-by: Christian Stromme <christian.stromme@qt.io>
+---
+ src/plugins/gstreamer/camerabin/camerabinsession.cpp | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/plugins/gstreamer/camerabin/camerabinsession.cpp
++++ qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+@@ -1235,6 +1235,9 @@ QList< QPair<int,int> > CameraBinSession
+         GstStructure *structure = gst_caps_get_structure(caps, i);
+         gst_structure_set_name(structure, "video/x-raw");
+         const GValue *oldRate = gst_structure_get_value(structure, "framerate");
++        if (!oldRate)
++            continue;
++
+         GValue rate;
+         memset(&rate, 0, sizeof(rate));
+         g_value_init(&rate, G_VALUE_TYPE(oldRate));
+@@ -1251,6 +1254,9 @@ QList< QPair<int,int> > CameraBinSession
+     for (uint i=0; i<gst_caps_get_size(caps); i++) {
+         GstStructure *structure = gst_caps_get_structure(caps, i);
+         const GValue *rateValue = gst_structure_get_value(structure, "framerate");
++        if (!rateValue)
++            continue;
++
+         readValue(rateValue, &res, continuous);
+     }
+ 
+@@ -1342,6 +1348,9 @@ QList<QSize> CameraBinSession::supported
+         gst_structure_set_name(structure, "video/x-raw");
+         const GValue *oldW = gst_structure_get_value(structure, "width");
+         const GValue *oldH = gst_structure_get_value(structure, "height");
++        if (!oldW || !oldH)
++            continue;
++
+         GValue w;
+         memset(&w, 0, sizeof(GValue));
+         GValue h;
+@@ -1366,6 +1375,8 @@ QList<QSize> CameraBinSession::supported
+         GstStructure *structure = gst_caps_get_structure(caps, i);
+         const GValue *wValue = gst_structure_get_value(structure, "width");
+         const GValue *hValue = gst_structure_get_value(structure, "height");
++        if (!wValue || !hValue)
++            continue;
+ 
+         QPair<int,int> wRange = valueRange(wValue, &isContinuous);
+         QPair<int,int> hRange = valueRange(hValue, &isContinuous);
