@@ -1,7 +1,6 @@
-From a29d83ff4bbab71fc2f8af77594a9aff997c2b2a Mon Sep 17 00:00:00 2001
 From: VaL Doroshchuk <valentyn.doroshchuk@qt.io>
 Date: Mon, 1 Oct 2018 15:48:41 +0200
-Subject: [PATCH] Gstreamer: Negotiate default settings before encoding
+Subject: Gstreamer: Negotiate default settings before encoding
  container profile
 
 In case if container format, video and audio codec are not provided,
@@ -9,6 +8,8 @@ need to fetch default ones.
 
 Change-Id: I616fabc7bf9ec7c7a08a4c5dacad87a1748209f3
 Reviewed-by: Andy Shaw <andy.shaw@qt.io>
+Origin: upstream, https://code.qt.io/cgit/qt/qtmultimedia.git/commit?id=a29d83ff4bbab71fc2f8af77594a9aff997c2b2a
+Last-updated: 2019-09-09
 ---
  src/plugins/gstreamer/camerabin/camerabinsession.cpp | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)

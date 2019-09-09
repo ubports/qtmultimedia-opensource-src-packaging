@@ -1,8 +1,6 @@
-From c1ca9510af3c3c4134b717f1863651783e338a9e Mon Sep 17 00:00:00 2001
 From: VaL Doroshchuk <valentyn.doroshchuk@qt.io>
 Date: Wed, 22 Aug 2018 10:49:39 +0200
-Subject: [PATCH] Gstreamer: Set video-profile to CameraBin before
- GST_STATE_READY
+Subject: Gstreamer: Set video-profile to CameraBin before GST_STATE_READY
 
 CameraBin creates default (application/ogg, video/x-theora) video profile
 or sets custom defined one, but ONLY on GST_STATE_CHANGE_NULL_TO_READY.
@@ -21,6 +19,9 @@ before the camera enters the READY state.
 Task-number: QTBUG-69895
 Change-Id: I3afbf1f8e7c953e2e49e9cad7e96ea0b18a29d1a
 Reviewed-by: Christian Stromme <christian.stromme@qt.io>
+Bug: https://bugreports.qt.io/browse/QTBUG-69895
+Origin: upstream, https://code.qt.io/cgit/qt/qtmultimedia.git/commit?id=c1ca9510af3c3c4134b717f1863651783e338a9e
+Last-updated: 2019-09-09
 ---
  src/gsttools/qgstcodecsinfo.cpp               |  2 +-
  .../gstreamer/camerabin/camerabinsession.cpp  | 20 ++++++++++---------

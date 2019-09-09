@@ -1,5 +1,5 @@
 rpath_nonlinux.diff
-0001-Gstreamer-Fix-crash-when-resolution-or-frame-rates-a.patch
-0002-Gstreamer-Fix-gst_mini_object_unref-assertion-refcou.patch
-0003-Gstreamer-Set-video-profile-to-CameraBin-before-GST_.patch
-0004-Gstreamer-Negotiate-default-settings-before-encoding.patch
+upstream/0001-Gstreamer-Fix-crash-when-resolution-or-frame-rates-a.patch
+upstream/0002-Gstreamer-Fix-gst_mini_object_unref-assertion-refcou.patch
+upstream/0003-Gstreamer-Set-video-profile-to-CameraBin-before-GST_.patch
+upstream/0004-Gstreamer-Negotiate-default-settings-before-encoding.patch

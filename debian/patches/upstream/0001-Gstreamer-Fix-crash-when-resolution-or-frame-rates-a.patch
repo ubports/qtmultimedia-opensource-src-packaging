@@ -1,14 +1,14 @@
-From 2af2d8359c835c1d9347c50b89b7c24658858d35 Mon Sep 17 00:00:00 2001
 From: VaL Doroshchuk <valentyn.doroshchuk@qt.io>
 Date: Fri, 17 Aug 2018 16:09:30 +0200
-Subject: [PATCH] Gstreamer: Fix crash when resolution or frame rates are
- requested
+Subject: Gstreamer: Fix crash when resolution or frame rates are requested
 
 When either resolution or frame rates have been requested when
 the camera is in unloaded state, caps might not have some values.
 
 Change-Id: Ie935c62d02e10f762957ecd9f89255ad0e8fbd0b
 Reviewed-by: Christian Stromme <christian.stromme@qt.io>
+Origin: upstream, https://code.qt.io/cgit/qt/qtmultimedia.git/commit?id=2af2d8359c835c1d9347c50b89b7c24658858d35
+Last-Update: 2019-09-09
 ---
  src/plugins/gstreamer/camerabin/camerabinsession.cpp | 11 +++++++++++
  1 file changed, 11 insertions(+)
