@@ -1,0 +1,55 @@
+From: VaL Doroshchuk <valentyn.doroshchuk@qt.io>
+Date: Wed, 15 Nov 2017 09:40:29 +0100
+Subject: Gstreamer: Emit an error if QCamera::start() fails
+
+If a camera is not started successfully error() signal has to be
+emitted.
+
+Added emitting an error from video source.
+Emitted only first error to prevent multiple subsequent errors.
+Added debug message.
+
+Task-number: QTBUG-51825
+Change-Id: I6ac936d2728213a4a64f3e4eb25ae2e2f109acca
+Reviewed-by: Christian Stromme <christian.stromme@qt.io>
+Bug: https://bugreports.qt.io/browse/QTBUG-51825
+Origin: upstream, https://code.qt.io/cgit/qt/qtmultimedia.git/commit?d49abfda2f5bbf15de3a5133c77d5115a75b3c2b
+Last-updated: 2019-09-09
+---
+ .../gstreamer/camerabin/camerabinsession.cpp       | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/plugins/gstreamer/camerabin/camerabinsession.cpp
++++ qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+@@ -762,7 +762,11 @@ void CameraBinSession::setStateHelper(QC
+ 
+ void CameraBinSession::setError(int err, const QString &errorString)
+ {
+-    m_pendingState = QCamera::UnloadedState;
++    // Emit only first error
++    if (m_pendingState == QCamera::UnloadedState)
++        return;
++
++    setState(QCamera::UnloadedState);
+     emit error(err, errorString);
+     setStatus(QCamera::UnloadedStatus);
+ }
+@@ -985,10 +989,14 @@ bool CameraBinSession::processBusMessage
+             if (err && err->message) {
+                 message = QString::fromUtf8(err->message);
+                 qWarning() << "CameraBin error:" << message;
++#if CAMERABIN_DEBUG
++                qWarning() << QString::fromUtf8(debug);
++#endif
+             }
+ 
+-            //only report error messager from camerabin
+-            if (GST_MESSAGE_SRC(gm) == GST_OBJECT_CAST(m_camerabin)) {
++            // Only report error messages from camerabin or video source
++            if (GST_MESSAGE_SRC(gm) == GST_OBJECT_CAST(m_camerabin)
++                || GST_MESSAGE_SRC(gm) == GST_OBJECT_CAST(m_videoSrc)) {
+                 if (message.isEmpty())
+                     message = tr("Camera error");
+ 

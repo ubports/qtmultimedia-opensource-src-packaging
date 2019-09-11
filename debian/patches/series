@@ -1,5 +1,12 @@
 rpath_nonlinux.diff
-upstream/0001-Gstreamer-Fix-crash-when-resolution-or-frame-rates-a.patch
-upstream/0002-Gstreamer-Fix-gst_mini_object_unref-assertion-refcou.patch
-upstream/0003-Gstreamer-Set-video-profile-to-CameraBin-before-GST_.patch
-upstream/0004-Gstreamer-Negotiate-default-settings-before-encoding.patch
+upstream/0001-Remove-unreachable-code.patch
+upstream/0002-Gstreamer-Emit-an-error-if-QCamera-start-fails.patch
+upstream/0003-CameraBin-Postpone-fetching-supported-viewfinder-set.patch
+upstream/0004-Gstreamer-Fix-crash-when-resolution-or-frame-rates-a.patch
+upstream/0005-Gstreamer-Fix-gst_mini_object_unref-assertion-refcou.patch
+upstream/0006-Gstreamer-Set-video-profile-to-CameraBin-before-GST_.patch
+upstream/0007-Gstreamer-Do-not-create-video-profile-if-no-codec-pr.patch
+upstream/0008-Don-t-append-suggested-extension-if-filename-include.patch
+upstream/0009-Gstreamer-Negotiate-default-settings-before-encoding.patch
+upstream/0010-GStreamer-support-video-orientation.patch
+upstream/0011-Prevent-immediate-stop-of-currently-unloading-gst-re.patch

@@ -17,7 +17,7 @@ Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/cam
 ===================================================================
 --- qtmultimedia-opensource-src-packaging.orig/src/plugins/gstreamer/camerabin/camerabinsession.cpp
 +++ qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.cpp
-@@ -942,7 +942,6 @@ bool CameraBinSession::processSyncMessag
+@@ -984,7 +984,6 @@ bool CameraBinSession::processSyncMessag
              GstVideoInfo previewInfo;
              if (gst_video_info_from_caps(&previewInfo, previewCaps))
                  image = QGstUtils::bufferToImage(buffer, previewInfo);

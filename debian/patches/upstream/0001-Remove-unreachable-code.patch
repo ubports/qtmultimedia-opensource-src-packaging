@@ -1,0 +1,31 @@
+From: Jesus Fernandez <jesus.fernandez@qt.io>
+Date: Mon, 19 Mar 2018 12:05:57 +0100
+Subject: Remove unreachable code
+
+Actions intended to be performed by the unreachable code will never occur.
+
+In CameraBinLocks::lockStatus(QCamera::LockType): Code block
+is unreachable because of the syntactic structure of the code (CWE-561)
+
+Coverity-Id: 188406
+Change-Id: I55a7ef8e87673519ff4f1ad5677054b34bf66d17
+Reviewed-by: Christian Stromme <christian.stromme@qt.io>
+Origin: https://code.qt.io/cgit/qt/qtmultimedia.git/commit?id=e0a069edc2d79b69fd187ffbe03a8388a612b3ff
+Last-updated: 2019-09-09
+---
+ src/plugins/gstreamer/camerabin/camerabinlocks.cpp | 2 --
+ 1 file changed, 2 deletions(-)
+
+Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinlocks.cpp
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/plugins/gstreamer/camerabin/camerabinlocks.cpp
++++ qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinlocks.cpp
+@@ -102,8 +102,6 @@ QCamera::LockStatus CameraBinLocks::lock
+     default:
+         return QCamera::Unlocked;
+     }
+-
+-    return lock == QCamera::LockFocus ? m_focus->focusStatus() : QCamera::Unlocked;
+ }
+ 
+ void CameraBinLocks::searchAndLock(QCamera::LockTypes locks)

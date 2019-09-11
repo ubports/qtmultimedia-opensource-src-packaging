@@ -1,0 +1,34 @@
+From: Mohammed Hassan <mohammed.hassan@jolla.com>
+Date: Thu, 24 Sep 2015 17:59:29 +0300
+Subject: Prevent immediate-stop of currently-unloading gst recording pipeline
+
+Don't blindly stop the recording pipeline if it is unloading.
+Ensure that we check to see if the pipeline is busy, even if
+it is in Unloaded state.
+
+Task-number: QTBUG-65398
+Change-Id: Ieac72967311bdd3bafae60bc1d0da9d227a6c237
+Reviewed-by: VaL Doroshchuk <valentyn.doroshchuk@qt.io>
+Bug: https://bugreports.qt.io/browse/QTBUG-65398
+Origin: upstream, https://code.qt.io/cgit/qt/qtmultimedia.git/commit?b1a0bc9d454793d705a4aba84b301d3f8dfb50ea
+Last-updated: 2019-09-11
+---
+ src/plugins/gstreamer/camerabin/camerabincontrol.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/plugins/gstreamer/camerabin/camerabincontrol.cpp b/src/plugins/gstreamer/camerabin/camerabincontrol.cpp
+index a34315b8..fdf3ff4a 100644
+--- a/src/plugins/gstreamer/camerabin/camerabincontrol.cpp
++++ b/src/plugins/gstreamer/camerabin/camerabincontrol.cpp
+@@ -121,7 +121,7 @@ void CameraBinControl::setState(QCamera::State state)
+ 
+         //special case for stopping the camera while it's busy,
+         //it should be delayed until the camera is idle
+-        if (state == QCamera::LoadedState &&
++        if ((state == QCamera::LoadedState || state == QCamera::UnloadedState) &&
+                 m_session->status() == QCamera::ActiveStatus &&
+                 m_session->isBusy()) {
+ #ifdef CAMEABIN_DEBUG
+-- 
+2.17.1
+

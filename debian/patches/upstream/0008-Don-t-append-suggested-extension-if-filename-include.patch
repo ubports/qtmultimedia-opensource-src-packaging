@@ -1,0 +1,48 @@
+From: Chris Adams <chris.adams@jollamobile.com>
+Date: Mon, 31 Oct 2016 14:17:32 +1000
+Subject: Don't append suggested extension if filename includes extension
+
+Commit 6b19a24b581c9c changed the way that the file name is composed
+for a video recording, so that a suggested extension for the given
+media format is appended to the file name.  That introduced a bug
+in the case where the correct extension was already part of the
+output location (filename) set for the sink, by causing a second
+(and possibly incorrect) extension to be appended to the filename.
+
+This commit ensures that if the filename already has a suffix, no
+suggested extension is appended.
+
+Task-number: QTBUG-65402
+Change-Id: I0bedf178b7a2aeec89aeb47002e2bae563ed44cd
+Reviewed-by: VaL Doroshchuk <valentyn.doroshchuk@qt.io>
+Bug: https://bugreports.qt.io/browse/QTBUG-65402
+Origin: upstream, https://code.qt.io/cgit/qt/qtmultimedia.git/commit?46b10ce610cfa3957ed4be719b9a7f3f1f39dcf0
+Last-updated: 2019-09-09
+---
+ src/plugins/gstreamer/camerabin/camerabinsession.cpp | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/plugins/gstreamer/camerabin/camerabinsession.cpp
++++ qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+@@ -1164,11 +1164,16 @@ void CameraBinSession::recordVideo()
+     if (format.isEmpty())
+         format = m_mediaContainerControl->actualContainerFormat();
+ 
+-    const QString actualFileName = m_mediaStorageLocation.generateFileName(m_sink.isLocalFile() ? m_sink.toLocalFile()
+-                                                                                                : m_sink.toString(),
++    const QString fileName = m_sink.isLocalFile() ? m_sink.toLocalFile() : m_sink.toString();
++    const QFileInfo fileInfo(fileName);
++    const QString extension = fileInfo.suffix().isEmpty()
++                            ? QGstUtils::fileExtensionForMimeType(format)
++                            : fileInfo.suffix();
++
++    const QString actualFileName = m_mediaStorageLocation.generateFileName(fileName,
+                                       QMediaStorageLocation::Movies,
+                                       QLatin1String("clip_"),
+-                                      QGstUtils::fileExtensionForMimeType(format));
++                                      extension);
+ 
+     m_recordingActive = true;
+     m_actualSink = QUrl::fromLocalFile(actualFileName);

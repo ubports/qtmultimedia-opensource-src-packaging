@@ -1,0 +1,155 @@
+From: VaL Doroshchuk <valentyn.doroshchuk@qt.io>
+Date: Mon, 7 May 2018 12:47:02 +0200
+Subject: CameraBin: Postpone fetching supported viewfinder settings
+
+Fetching caps from video source might take sometime and hang ui thread.
+Currently the caps are fetched when the camera gets ready which produces a hang.
+
+Proposed a fix to postpone fetching caps when requested and not when camera loaded.
+
+Task-number: QTBUG-67920
+Change-Id: I7734ef96c98b2c425714eacc1fd1222fd7ee5c44
+Reviewed-by: Christian Stromme <christian.stromme@qt.io>
+Bug: https://bugreports.qt.io/browse/QTBUG-67920
+Origin: upstream, https://code.qt.io/cgit/qt/qtmultimedia.git/commit?84d0d87699a2a92b3207beae30a52f25e23acb65
+Last-updated: 2019-09-10
+---
+ .../gstreamer/camerabin/camerabinsession.cpp  | 80 ++++++++++---------
+ .../gstreamer/camerabin/camerabinsession.h    |  3 +-
+ 2 files changed, 43 insertions(+), 40 deletions(-)
+
+Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/plugins/gstreamer/camerabin/camerabinsession.cpp
++++ qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+@@ -361,9 +361,9 @@ void CameraBinSession::setupCaptureResol
+                 Both = 0x4
+             };
+             quint8 found = Nothing;
+-
+-            for (int i = 0; i < m_supportedViewfinderSettings.count() && !(found & Both); ++i) {
+-                const QCameraViewfinderSettings &s = m_supportedViewfinderSettings.at(i);
++            auto viewfinderSettings = supportedViewfinderSettings();
++            for (int i = 0; i < viewfinderSettings.count() && !(found & Both); ++i) {
++                const QCameraViewfinderSettings &s = viewfinderSettings.at(i);
+                 if (s.resolution() == viewfinderResolution) {
+                     if ((qFuzzyIsNull(viewfinderFrameRate) || s.maximumFrameRate() == viewfinderFrameRate)
+                             && (viewfinderPixelFormat == QVideoFrame::Format_Invalid || s.pixelFormat() == viewfinderPixelFormat))
+@@ -671,8 +671,46 @@ void CameraBinSession::setViewfinder(QOb
+     }
+ }
+ 
++static QList<QCameraViewfinderSettings> capsToViewfinderSettings(GstCaps *supportedCaps)
++{
++    QList<QCameraViewfinderSettings> settings;
++
++    if (!supportedCaps)
++        return settings;
++
++    supportedCaps = qt_gst_caps_normalize(supportedCaps);
++
++    // Convert caps to QCameraViewfinderSettings
++    for (uint i = 0; i < gst_caps_get_size(supportedCaps); ++i) {
++        const GstStructure *structure = gst_caps_get_structure(supportedCaps, i);
++
++        QCameraViewfinderSettings s;
++        s.setResolution(QGstUtils::structureResolution(structure));
++        s.setPixelFormat(QGstUtils::structurePixelFormat(structure));
++        s.setPixelAspectRatio(QGstUtils::structurePixelAspectRatio(structure));
++
++        QPair<qreal, qreal> frameRateRange = QGstUtils::structureFrameRateRange(structure);
++        s.setMinimumFrameRate(frameRateRange.first);
++        s.setMaximumFrameRate(frameRateRange.second);
++
++        if (!s.resolution().isEmpty()
++            && s.pixelFormat() != QVideoFrame::Format_Invalid
++            && !settings.contains(s)) {
++            settings.append(s);
++        }
++    }
++
++    gst_caps_unref(supportedCaps);
++    return settings;
++}
++
+ QList<QCameraViewfinderSettings> CameraBinSession::supportedViewfinderSettings() const
+ {
++    if (m_status == QCamera::LoadedStatus && m_supportedViewfinderSettings.isEmpty()) {
++        m_supportedViewfinderSettings =
++            capsToViewfinderSettings(supportedCaps(QCamera::CaptureViewfinder));
++    }
++
+     return m_supportedViewfinderSettings;
+ }
+ 
+@@ -1070,7 +1108,7 @@ bool CameraBinSession::processBusMessage
+                         break;
+                     case GST_STATE_READY:
+                         if (oldState == GST_STATE_NULL)
+-                            updateSupportedViewfinderSettings();
++                            m_supportedViewfinderSettings.clear();
+ 
+                         setMetaData(m_metaData);
+                         setStatus(QCamera::LoadedStatus);
+@@ -1448,40 +1486,6 @@ QList<QSize> CameraBinSession::supported
+     return res;
+ }
+ 
+-void CameraBinSession::updateSupportedViewfinderSettings()
+-{
+-    m_supportedViewfinderSettings.clear();
+-
+-    GstCaps *supportedCaps = this->supportedCaps(QCamera::CaptureViewfinder);
+-
+-    // Convert caps to QCameraViewfinderSettings
+-    if (supportedCaps) {
+-        supportedCaps = qt_gst_caps_normalize(supportedCaps);
+-
+-        for (uint i = 0; i < gst_caps_get_size(supportedCaps); i++) {
+-            const GstStructure *structure = gst_caps_get_structure(supportedCaps, i);
+-
+-            QCameraViewfinderSettings s;
+-            s.setResolution(QGstUtils::structureResolution(structure));
+-            s.setPixelFormat(QGstUtils::structurePixelFormat(structure));
+-            s.setPixelAspectRatio(QGstUtils::structurePixelAspectRatio(structure));
+-
+-            QPair<qreal, qreal> frameRateRange = QGstUtils::structureFrameRateRange(structure);
+-            s.setMinimumFrameRate(frameRateRange.first);
+-            s.setMaximumFrameRate(frameRateRange.second);
+-
+-            if (!s.resolution().isEmpty()
+-                    && s.pixelFormat() != QVideoFrame::Format_Invalid
+-                    && !m_supportedViewfinderSettings.contains(s)) {
+-
+-                m_supportedViewfinderSettings.append(s);
+-            }
+-        }
+-
+-        gst_caps_unref(supportedCaps);
+-    }
+-}
+-
+ void CameraBinSession::elementAdded(GstBin *, GstElement *element, CameraBinSession *session)
+ {
+     GstElementFactory *factory = gst_element_get_factory(element);
+Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.h
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/plugins/gstreamer/camerabin/camerabinsession.h
++++ qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.h
+@@ -203,7 +203,6 @@ private:
+     bool setupCameraBin();
+     void setAudioCaptureCaps();
+     GstCaps *supportedCaps(QCamera::CaptureModes mode) const;
+-    void updateSupportedViewfinderSettings();
+     static void updateBusyStatus(GObject *o, GParamSpec *p, gpointer d);
+ 
+     QString currentContainerFormat() const;
+@@ -229,7 +228,7 @@ private:
+     QGstreamerElementFactory *m_videoInputFactory;
+     QObject *m_viewfinder;
+     QGstreamerVideoRendererInterface *m_viewfinderInterface;
+-    QList<QCameraViewfinderSettings> m_supportedViewfinderSettings;
++    mutable QList<QCameraViewfinderSettings> m_supportedViewfinderSettings;
+     QCameraViewfinderSettings m_viewfinderSettings;
+     QCameraViewfinderSettings m_actualViewfinderSettings;
+ 

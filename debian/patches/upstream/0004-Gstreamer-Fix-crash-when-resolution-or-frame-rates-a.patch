@@ -17,7 +17,7 @@ Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/cam
 ===================================================================
 --- qtmultimedia-opensource-src-packaging.orig/src/plugins/gstreamer/camerabin/camerabinsession.cpp
 +++ qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.cpp
-@@ -1235,6 +1235,9 @@ QList< QPair<int,int> > CameraBinSession
+@@ -1281,6 +1281,9 @@ QList< QPair<int,int> > CameraBinSession
          GstStructure *structure = gst_caps_get_structure(caps, i);
          gst_structure_set_name(structure, "video/x-raw");
          const GValue *oldRate = gst_structure_get_value(structure, "framerate");
@@ -27,7 +27,7 @@ Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/cam
          GValue rate;
          memset(&rate, 0, sizeof(rate));
          g_value_init(&rate, G_VALUE_TYPE(oldRate));
-@@ -1251,6 +1254,9 @@ QList< QPair<int,int> > CameraBinSession
+@@ -1297,6 +1300,9 @@ QList< QPair<int,int> > CameraBinSession
      for (uint i=0; i<gst_caps_get_size(caps); i++) {
          GstStructure *structure = gst_caps_get_structure(caps, i);
          const GValue *rateValue = gst_structure_get_value(structure, "framerate");
@@ -37,7 +37,7 @@ Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/cam
          readValue(rateValue, &res, continuous);
      }
  
-@@ -1342,6 +1348,9 @@ QList<QSize> CameraBinSession::supported
+@@ -1388,6 +1394,9 @@ QList<QSize> CameraBinSession::supported
          gst_structure_set_name(structure, "video/x-raw");
          const GValue *oldW = gst_structure_get_value(structure, "width");
          const GValue *oldH = gst_structure_get_value(structure, "height");
@@ -47,7 +47,7 @@ Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/cam
          GValue w;
          memset(&w, 0, sizeof(GValue));
          GValue h;
-@@ -1366,6 +1375,8 @@ QList<QSize> CameraBinSession::supported
+@@ -1412,6 +1421,8 @@ QList<QSize> CameraBinSession::supported
          GstStructure *structure = gst_caps_get_structure(caps, i);
          const GValue *wValue = gst_structure_get_value(structure, "width");
          const GValue *hValue = gst_structure_get_value(structure, "height");

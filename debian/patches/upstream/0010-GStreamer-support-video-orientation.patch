@@ -1,0 +1,231 @@
+From: Alexander Volkov <a.volkov@rusbitech.ru>
+Date: Thu, 29 Nov 2018 14:48:58 +0300
+Subject: GStreamer: support video orientation
+
+Change-Id: I233c45824f517c185cb245d8a7d77cab8551fc51
+Reviewed-by: VaL Doroshchuk <valentyn.doroshchuk@qt.io>
+Origin: backport, https://code.qt.io/cgit/qt/qtmultimedia.git/commit?c877776c354a625373e1dc0f38ac4918da9a056f
+Last-updated: 2019-09-10
+---
+
+Index: qtmultimedia-opensource-src-packaging/examples/multimedia/video/qmlvideo/qml/qmlvideo/VideoMetadata.qml
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/examples/multimedia/video/qmlvideo/qml/qmlvideo/VideoMetadata.qml
++++ qtmultimedia-opensource-src-packaging/examples/multimedia/video/qmlvideo/qml/qmlvideo/VideoMetadata.qml
+@@ -124,6 +124,10 @@ Scene {
+                 color: "#e0e0e0"
+                 text: "Seekable:" + content.contentItem().metaData.seekable
+             }
++            Text {
++                color: "#e0e0e0"
++                text: "Orientation:" + content.contentItem().metaData.orientation
++            }
+         }
+     }
+ 
+Index: qtmultimedia-opensource-src-packaging/src/gsttools/qgstutils.cpp
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/gsttools/qgstutils.cpp
++++ qtmultimedia-opensource-src-packaging/src/gsttools/qgstutils.cpp
+@@ -1466,6 +1466,37 @@ QString QGstUtils::fileExtensionForMimeT
+     return extension;
+ }
+ 
++#if GST_CHECK_VERSION(0,10,30)
++QVariant QGstUtils::fromGStreamerOrientation(const QVariant &value)
++{
++    // Note gstreamer tokens either describe the counter clockwise rotation of the
++    // image or the clockwise transform to apply to correct the image.  The orientation
++    // value returned is the clockwise rotation of the image.
++    const QString token = value.toString();
++    if (token == QStringLiteral("rotate-90"))
++        return 270;
++    if (token == QStringLiteral("rotate-180"))
++        return 180;
++    if (token == QStringLiteral("rotate-270"))
++        return 90;
++    return 0;
++}
++
++QVariant QGstUtils::toGStreamerOrientation(const QVariant &value)
++{
++    switch (value.toInt()) {
++    case 90:
++        return QStringLiteral("rotate-270");
++    case 180:
++        return QStringLiteral("rotate-180");
++    case 270:
++        return QStringLiteral("rotate-90");
++    default:
++        return QStringLiteral("rotate-0");
++    }
++}
++#endif
++
+ void qt_gst_object_ref_sink(gpointer object)
+ {
+ #if GST_CHECK_VERSION(0,10,24)
+Index: qtmultimedia-opensource-src-packaging/src/multimedia/qmediametadata.cpp
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/multimedia/qmediametadata.cpp
++++ qtmultimedia-opensource-src-packaging/src/multimedia/qmediametadata.cpp
+@@ -105,6 +105,7 @@ Q_DEFINE_METADATA(CoverArtUrlLarge);
+ // Image/Video
+ Q_DEFINE_METADATA(Resolution);
+ Q_DEFINE_METADATA(PixelAspectRatio);
++Q_DEFINE_METADATA(Orientation);
+ 
+ // Video
+ Q_DEFINE_METADATA(VideoFrameRate);
+@@ -124,7 +125,6 @@ Q_DEFINE_METADATA(CameraManufacturer);
+ Q_DEFINE_METADATA(CameraModel);
+ Q_DEFINE_METADATA(Event);
+ Q_DEFINE_METADATA(Subject);
+-Q_DEFINE_METADATA(Orientation);
+ Q_DEFINE_METADATA(ExposureTime);
+ Q_DEFINE_METADATA(FNumber);
+ Q_DEFINE_METADATA(ExposureProgram);
+@@ -239,6 +239,7 @@ Q_DEFINE_METADATA(ThumbnailImage);
+     Image and video attributes
+     \row \li Resolution \li The dimensions of an image or video. \li QSize
+     \row \li PixelAspectRatio \li The pixel aspect ratio of an image or video. \li QSize
++    \row \li Orientation \li Orientation of an image or video. \li int (degrees)
+ 
+     \header \li {3,1}
+     Video attributes
+@@ -262,7 +263,6 @@ Q_DEFINE_METADATA(ThumbnailImage);
+     \row \li CameraModel \li The model of the camera used to capture the media.  \li QString
+     \row \li Event \li The event during which the media was captured.  \li QString
+     \row \li Subject \li The subject of the media.  \li QString
+-    \row \li Orientation \li Orientation of image.  \li int (degrees)
+     \row \li ExposureTime \li Exposure time, given in seconds.  \li qreal
+     \row \li FNumber \li The F Number.  \li int
+     \row \li ExposureProgram
+Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinmetadata.cpp
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/plugins/gstreamer/camerabin/camerabinmetadata.cpp
++++ qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinmetadata.cpp
+@@ -43,45 +43,12 @@
+ 
+ #include <gst/gst.h>
+ #include <gst/gstversion.h>
++#include <private/qgstutils_p.h>
+ 
+ #include <QDebug>
+ 
+ QT_BEGIN_NAMESPACE
+ 
+-#if GST_CHECK_VERSION(0,10,30)
+-
+-static QVariant fromGStreamerOrientation(const QVariant &value)
+-{
+-    // Note gstreamer tokens either describe the counter clockwise rotation of the
+-    // image or the clockwise transform to apply to correct the image.  The orientation
+-    // value returned is the clockwise rotation of the image.
+-    const QString token = value.toString();
+-    if (token == QStringLiteral("rotate-90"))
+-        return 270;
+-    else if (token == QStringLiteral("rotate-180"))
+-        return 180;
+-    else if (token == QStringLiteral("rotate-270"))
+-        return 90;
+-    else
+-        return 0;
+-}
+-
+-#endif
+-
+-static QVariant toGStreamerOrientation(const QVariant &value)
+-{
+-    switch (value.toInt()) {
+-    case 90:
+-        return QStringLiteral("rotate-270");
+-    case 180:
+-        return QStringLiteral("rotate-180");
+-    case 270:
+-        return QStringLiteral("rotate-90");
+-    default:
+-        return QStringLiteral("rotate-0");
+-    }
+-}
+-
+ namespace {
+     struct QGStreamerMetaDataKey
+     {
+@@ -196,7 +163,7 @@ QVariant CameraBinMetaData::metaData(con
+ {
+ #if GST_CHECK_VERSION(0,10,30)
+     if (key == QMediaMetaData::Orientation) {
+-        return fromGStreamerOrientation(m_values.value(QByteArray(GST_TAG_IMAGE_ORIENTATION)));
++        return QGstUtils::fromGStreamerOrientation(m_values.value(QByteArray(GST_TAG_IMAGE_ORIENTATION)));
+     } else if (key == QMediaMetaData::GPSSpeed) {
+         const double metersPerSec = m_values.value(QByteArray(GST_TAG_GEO_LOCATION_MOVEMENT_SPEED)).toDouble();
+         return (metersPerSec * 3600) / 1000;
+@@ -214,14 +181,16 @@ QVariant CameraBinMetaData::metaData(con
+ void CameraBinMetaData::setMetaData(const QString &key, const QVariant &value)
+ {
+     QVariant correctedValue = value;
++#if GST_CHECK_VERSION(0,10,30)
+     if (value.isValid()) {
+         if (key == QMediaMetaData::Orientation) {
+-            correctedValue = toGStreamerOrientation(value);
++            correctedValue = QGstUtils::toGStreamerOrientation(value);
+         } else if (key == QMediaMetaData::GPSSpeed) {
+             // kilometers per hour to meters per second.
+             correctedValue = (value.toDouble() * 1000) / 3600;
+         }
+     }
++#endif
+ 
+     const auto keys = *qt_gstreamerMetaDataKeys();
+     for (const QGStreamerMetaDataKey &metadataKey : keys) {
+Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/mediaplayer/qgstreamermetadataprovider.cpp
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/plugins/gstreamer/mediaplayer/qgstreamermetadataprovider.cpp
++++ qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/mediaplayer/qgstreamermetadataprovider.cpp
+@@ -43,6 +43,7 @@
+ #include <QtMultimedia/qmediametadata.h>
+ 
+ #include <gst/gstversion.h>
++#include <private/qgstutils_p.h>
+ 
+ QT_BEGIN_NAMESPACE
+ 
+@@ -99,6 +100,9 @@ static const QGstreamerMetaDataKeyLookup
+         // Image/Video
+         metadataKeys->insert("resolution", QMediaMetaData::Resolution);
+         metadataKeys->insert("pixel-aspect-ratio", QMediaMetaData::PixelAspectRatio);
++#if GST_CHECK_VERSION(0,10,30)
++        metadataKeys->insert(GST_TAG_IMAGE_ORIENTATION, QMediaMetaData::Orientation);
++#endif
+ 
+         // Video
+         //metadataKeys->insert(0, QMediaMetaData::VideoFrameRate);
+@@ -145,6 +149,10 @@ bool QGstreamerMetaDataProvider::isWrita
+ 
+ QVariant QGstreamerMetaDataProvider::metaData(const QString &key) const
+ {
++#if GST_CHECK_VERSION(0,10,30)
++    if (key == QMediaMetaData::Orientation)
++        return QGstUtils::fromGStreamerOrientation(m_tags.value(key));
++#endif
+     return m_tags.value(key);
+ }
+ 
+Index: qtmultimedia-opensource-src-packaging/src/multimedia/gsttools_headers/qgstutils_p.h
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/multimedia/gsttools_headers/qgstutils_p.h
++++ qtmultimedia-opensource-src-packaging/src/multimedia/gsttools_headers/qgstutils_p.h
+@@ -147,6 +147,12 @@ namespace QGstUtils {
+     QPair<qreal, qreal> structureFrameRateRange(const GstStructure *s);
+ 
+     QString fileExtensionForMimeType(const QString &mimeType);
++
++#if GST_CHECK_VERSION(0,10,30)
++    QVariant fromGStreamerOrientation(const QVariant &value);
++    QVariant toGStreamerOrientation(const QVariant &value);
++#endif
++
+ }
+ 
+ void qt_gst_object_ref_sink(gpointer object);

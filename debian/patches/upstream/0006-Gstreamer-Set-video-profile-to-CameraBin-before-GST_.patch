@@ -44,7 +44,7 @@ Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/cam
 ===================================================================
 --- qtmultimedia-opensource-src-packaging.orig/src/plugins/gstreamer/camerabin/camerabinsession.cpp
 +++ qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.cpp
-@@ -781,6 +781,17 @@ void CameraBinSession::load()
+@@ -823,6 +823,17 @@ void CameraBinSession::load()
          return;
      }
  
@@ -62,7 +62,7 @@ Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/cam
      gst_element_set_state(m_camerabin, GST_STATE_READY);
  }
  
-@@ -816,15 +827,6 @@ void CameraBinSession::start()
+@@ -858,15 +869,6 @@ void CameraBinSession::start()
  
      m_recorderControl->applySettings();
  

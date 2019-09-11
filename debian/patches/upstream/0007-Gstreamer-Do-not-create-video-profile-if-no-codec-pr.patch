@@ -1,0 +1,38 @@
+From: VaL Doroshchuk <valentyn.doroshchuk@qt.io>
+Date: Fri, 28 Sep 2018 15:17:39 +0200
+Subject: Gstreamer: Do not create video profile if no codec provided
+
+Since camerabin2 requires not empty caps (format) in gst_encoding_video_profile.
+
+Change-Id: Iba073138321635a51c9364d54ec95707ccbc7445
+Reviewed-by: Christian Stromme <christian.stromme@qt.io>
+Origin: upstream, https://code.qt.io/cgit/qt/qtmultimedia.git/commit?cce3e8a019a3272ff422b1cdb1ce11bb7b00feea
+Last-updated: 2019-09-09
+---
+ .../gstreamer/camerabin/camerabinvideoencoder.cpp     | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
+
+Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinvideoencoder.cpp
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/plugins/gstreamer/camerabin/camerabinvideoencoder.cpp
++++ qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinvideoencoder.cpp
+@@ -173,15 +173,12 @@ QPair<int,int> CameraBinVideoEncoder::ra
+ GstEncodingProfile *CameraBinVideoEncoder::createProfile()
+ {
+     QString codec = m_actualVideoSettings.codec();
+-    QString preset = m_actualVideoSettings.encodingOption(QStringLiteral("preset")).toString();
+-
+-    GstCaps *caps;
++    GstCaps *caps = !codec.isEmpty() ? gst_caps_from_string(codec.toLatin1()) : nullptr;
+ 
+-    if (codec.isEmpty())
+-        caps = 0;
+-    else
+-        caps = gst_caps_from_string(codec.toLatin1());
++    if (!caps)
++        return nullptr;
+ 
++    QString preset = m_actualVideoSettings.encodingOption(QStringLiteral("preset")).toString();
+     GstEncodingVideoProfile *profile = gst_encoding_video_profile_new(
+                 caps,
+                 !preset.isEmpty() ? preset.toLatin1().constData() : NULL, //preset
