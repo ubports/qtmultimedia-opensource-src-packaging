@@ -1,0 +1,373 @@
+From: Andrew den Exter <andrew.den.exter@jollamobile.com>
+Date: Thu, 5 Dec 2013 15:38:14 +1000
+Subject: Add a control which allows overriding the gstreamer video sink.
+
+This enables applications to selectively use platform specific or
+unusual (video4linux perhaps) gstreamer sink elements to render video.
+
+Change-Id: Ife2c2f9b2149d6b598c69a78f1e116ba05b46e10
+Origin: backport, https://git.sailfishos.org/mer-core/qtmultimedia/commit/e2ca2d24852638307fcb48166a2a487bba868b1d
+Last-updated: 2019-09-16
+---
+Index: qtmultimedia-opensource-src-packaging/src/gsttools/gsttools.pro
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/gsttools/gsttools.pro
++++ qtmultimedia-opensource-src-packaging/src/gsttools/gsttools.pro
+@@ -35,6 +35,8 @@ PRIVATE_HEADERS += \
+     qgstcodecsinfo_p.h \
+     qgstreamervideoprobecontrol_p.h \
+     qgstreameraudioprobecontrol_p.h \
++    qgstreamervideosinkcontrol_p.h \
++    qgstreamerelementcontrol_p.h \
+     qgstreamervideowindow_p.h \
+     qgstreamervideooverlay_p.h
+ 
+@@ -51,6 +53,8 @@ SOURCES += \
+     qgstcodecsinfo.cpp \
+     qgstreamervideoprobecontrol.cpp \
+     qgstreameraudioprobecontrol.cpp \
++    qgstreamervideosinkcontrol.cpp \
++    qgstreamerelementcontrol.cpp \
+     qgstreamervideowindow.cpp \
+     qgstreamervideooverlay.cpp
+ 
+Index: qtmultimedia-opensource-src-packaging/src/gsttools/qgstreamerelementcontrol.cpp
+===================================================================
+--- /dev/null
++++ qtmultimedia-opensource-src-packaging/src/gsttools/qgstreamerelementcontrol.cpp
+@@ -0,0 +1,52 @@
++/****************************************************************************
++**
++** Copyright (C) 2013 Jolla Ltd.
++** Contact: http://www.qt-project.org/legal
++**
++** This file is part of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and Digia.  For licensing terms and
++** conditions see http://qt.digia.com/licensing.  For further information
++** use the contact form at http://qt.digia.com/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 as published by the Free Software
++** Foundation and appearing in the file LICENSE.LGPL included in the
++** packaging of this file.  Please review the following information to
++** ensure the GNU Lesser General Public License version 2.1 requirements
++** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** In addition, as a special exception, Digia gives you certain additional
++** rights.  These rights are described in the Digia Qt LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** GNU General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU
++** General Public License version 3.0 as published by the Free Software
++** Foundation and appearing in the file LICENSE.GPL included in the
++** packaging of this file.  Please review the following information to
++** ensure the GNU General Public License version 3.0 requirements will be
++** met: http://www.gnu.org/copyleft/gpl.html.
++**
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#include "qgstreamerelementcontrol_p.h"
++
++
++QGStreamerElementControl::QGStreamerElementControl(QObject *parent)
++    : QMediaControl(parent)
++{
++}
++
++QGStreamerElementControl::~QGStreamerElementControl()
++{
++}
+Index: qtmultimedia-opensource-src-packaging/src/gsttools/qgstreamervideosinkcontrol.cpp
+===================================================================
+--- /dev/null
++++ qtmultimedia-opensource-src-packaging/src/gsttools/qgstreamervideosinkcontrol.cpp
+@@ -0,0 +1,73 @@
++/****************************************************************************
++**
++** Copyright (C) 2013 Jolla Ltd.
++** Contact: http://www.qt-project.org/legal
++**
++** This file is part of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and Digia.  For licensing terms and
++** conditions see http://qt.digia.com/licensing.  For further information
++** use the contact form at http://qt.digia.com/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 as published by the Free Software
++** Foundation and appearing in the file LICENSE.LGPL included in the
++** packaging of this file.  Please review the following information to
++** ensure the GNU Lesser General Public License version 2.1 requirements
++** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** In addition, as a special exception, Digia gives you certain additional
++** rights.  These rights are described in the Digia Qt LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** GNU General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU
++** General Public License version 3.0 as published by the Free Software
++** Foundation and appearing in the file LICENSE.GPL included in the
++** packaging of this file.  Please review the following information to
++** ensure the GNU General Public License version 3.0 requirements will be
++** met: http://www.gnu.org/copyleft/gpl.html.
++**
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#include "qgstreamervideosinkcontrol_p.h"
++
++#include <gst/gst.h>
++
++QGStreamerVideoSinkControl::QGStreamerVideoSinkControl(QObject *parent)
++    : QGStreamerElementControl(parent)
++    , m_videoSink(0)
++{
++}
++
++QGStreamerVideoSinkControl::~QGStreamerVideoSinkControl()
++{
++    if (m_videoSink)
++        gst_object_unref(GST_OBJECT(m_videoSink));
++}
++
++GstElement *QGStreamerVideoSinkControl::videoSink()
++{
++    return m_videoSink;
++}
++
++void QGStreamerVideoSinkControl::setElement(GstElement *element)
++{
++    if (m_videoSink != element) {
++        if (m_videoSink)
++            gst_object_unref(GST_OBJECT(m_videoSink));
++        m_videoSink = element;
++        if (m_videoSink)
++            gst_object_ref(GST_OBJECT(element));
++        emit sinkChanged();
++    }
++}
+Index: qtmultimedia-opensource-src-packaging/src/multimedia/gsttools_headers/qgstreamerelementcontrol_p.h
+===================================================================
+--- /dev/null
++++ qtmultimedia-opensource-src-packaging/src/multimedia/gsttools_headers/qgstreamerelementcontrol_p.h
+@@ -0,0 +1,63 @@
++/****************************************************************************
++**
++** Copyright (C) 2013 Jolla Ltd.
++** Contact: http://www.qt-project.org/legal
++**
++** This file is part of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and Digia.  For licensing terms and
++** conditions see http://qt.digia.com/licensing.  For further information
++** use the contact form at http://qt.digia.com/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 as published by the Free Software
++** Foundation and appearing in the file LICENSE.LGPL included in the
++** packaging of this file.  Please review the following information to
++** ensure the GNU Lesser General Public License version 2.1 requirements
++** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** In addition, as a special exception, Digia gives you certain additional
++** rights.  These rights are described in the Digia Qt LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** GNU General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU
++** General Public License version 3.0 as published by the Free Software
++** Foundation and appearing in the file LICENSE.GPL included in the
++** packaging of this file.  Please review the following information to
++** ensure the GNU General Public License version 3.0 requirements will be
++** met: http://www.gnu.org/copyleft/gpl.html.
++**
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#ifndef QGSTREAMERELEMENTCONTROL_P_H
++#define QGSTREAMERELEMENTCONTROL_P_H
++
++#include <QtMultimedia/qmediacontrol.h>
++
++typedef struct _GstElement GstElement;
++
++class QGStreamerElementControl : public QMediaControl
++{
++    Q_OBJECT
++public:
++    virtual ~QGStreamerElementControl();
++
++    virtual void setElement(GstElement *element) = 0;
++
++protected:
++    QGStreamerElementControl(QObject *parent = 0);
++};
++
++#define QGStreamerVideoSinkControl_iid "org.qt-project.qt.gstreamervideosinkcontrol/5.2"
++
++#endif
+Index: qtmultimedia-opensource-src-packaging/src/multimedia/gsttools_headers/qgstreamervideosinkcontrol_p.h
+===================================================================
+--- /dev/null
++++ qtmultimedia-opensource-src-packaging/src/multimedia/gsttools_headers/qgstreamervideosinkcontrol_p.h
+@@ -0,0 +1,69 @@
++/****************************************************************************
++**
++** Copyright (C) 2013 Jolla Ltd.
++** Contact: http://www.qt-project.org/legal
++**
++** This file is part of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and Digia.  For licensing terms and
++** conditions see http://qt.digia.com/licensing.  For further information
++** use the contact form at http://qt.digia.com/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 as published by the Free Software
++** Foundation and appearing in the file LICENSE.LGPL included in the
++** packaging of this file.  Please review the following information to
++** ensure the GNU Lesser General Public License version 2.1 requirements
++** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** In addition, as a special exception, Digia gives you certain additional
++** rights.  These rights are described in the Digia Qt LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** GNU General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU
++** General Public License version 3.0 as published by the Free Software
++** Foundation and appearing in the file LICENSE.GPL included in the
++** packaging of this file.  Please review the following information to
++** ensure the GNU General Public License version 3.0 requirements will be
++** met: http://www.gnu.org/copyleft/gpl.html.
++**
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#ifndef QGSTREAMERVIDEOSINKCONTROL_P_H
++#define QGSTREAMERVIDEOSINKCONTROL_P_H
++
++#include <private/qgstreamerelementcontrol_p.h>
++#include <private/qgstreamervideorendererinterface_p.h>
++
++class QGStreamerVideoSinkControl
++        : public QGStreamerElementControl
++        , public QGstreamerVideoRendererInterface
++{
++    Q_OBJECT
++    Q_INTERFACES(QGstreamerVideoRendererInterface)
++public:
++    QGStreamerVideoSinkControl(QObject *parent = 0);
++    ~QGStreamerVideoSinkControl();
++
++    GstElement *videoSink();
++    void setElement(GstElement *element);
++
++Q_SIGNALS:
++    void sinkChanged();
++    void readyChanged(bool);
++
++private:
++    GstElement *m_videoSink;
++};
++
++#endif
+Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinservice.cpp
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/plugins/gstreamer/camerabin/camerabinservice.cpp
++++ qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinservice.cpp
+@@ -74,6 +74,7 @@
+ #endif
+ #include <private/qgstreamervideowindow_p.h>
+ #include <private/qgstreamervideorenderer_p.h>
++#include <private/qgstreamervideosinkcontrol_p.h>
+ #include <private/qmediaserviceprovider_p.h>
+ 
+ #include <QtCore/qdebug.h>
+@@ -155,6 +156,8 @@ QMediaControl *CameraBinService::request
+             m_videoOutput = m_videoRenderer;
+         } else if (qstrcmp(name, QVideoWindowControl_iid) == 0) {
+             m_videoOutput = m_videoWindow;
++        } else if (qstrcmp(name, QGStreamerVideoSinkControl_iid) == 0) {
++            m_videoOutput = new QGStreamerVideoSinkControl(this);
+         }
+ #if defined(HAVE_WIDGETS)
+         else if (qstrcmp(name, QVideoWidgetControl_iid) == 0) {
+Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/mediacapture/qgstreamercaptureservice.cpp
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/plugins/gstreamer/mediacapture/qgstreamercaptureservice.cpp
++++ qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/mediacapture/qgstreamercaptureservice.cpp
+@@ -55,6 +55,7 @@
+ #include "qgstreamerimagecapturecontrol.h"
+ #include <private/qgstreameraudioinputselector_p.h>
+ #include <private/qgstreamervideoinputdevicecontrol_p.h>
++#include <private/qgstreamervideosinkcontrol_p.h>
+ #include <private/qgstreameraudioprobecontrol_p.h>
+ 
+ #include <private/qgstreamervideorenderer_p.h>
+@@ -194,6 +195,8 @@ QMediaControl *QGstreamerCaptureService:
+             m_videoOutput = m_videoRenderer;
+         } else if (qstrcmp(name, QVideoWindowControl_iid) == 0) {
+             m_videoOutput = m_videoWindow;
++        } else if (qstrcmp(name, QGStreamerVideoSinkControl_iid) == 0) {
++            m_videoOutput = new QGStreamerVideoSinkControl(this);
+         }
+ #if defined(HAVE_WIDGETS)
+         else if (qstrcmp(name, QVideoWidgetControl_iid) == 0) {
+Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/mediaplayer/qgstreamerplayerservice.cpp
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/plugins/gstreamer/mediaplayer/qgstreamerplayerservice.cpp
++++ qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/mediaplayer/qgstreamerplayerservice.cpp
+@@ -56,6 +56,7 @@
+ #endif
+ #include <private/qgstreamervideowindow_p.h>
+ #include <private/qgstreamervideorenderer_p.h>
++#include <private/qgstreamervideosinkcontrol_p.h>
+ 
+ #if QT_CONFIG(mirclient) && defined (__arm__)
+ #include "private/qgstreamermirtexturerenderer_p.h"
+@@ -158,6 +159,8 @@ QMediaControl *QGstreamerPlayerService::
+             m_videoOutput = m_videoRenderer;
+         else if (qstrcmp(name, QVideoWindowControl_iid) == 0)
+             m_videoOutput = m_videoWindow;
++        else if (qstrcmp(name, QGStreamerVideoSinkControl_iid) == 0)
++            m_videoOutput = new QGStreamerVideoSinkControl(this);
+ #if defined(HAVE_WIDGETS)
+         else if (qstrcmp(name, QVideoWidgetControl_iid) == 0)
+             m_videoOutput = m_videoWidget;

@@ -1,0 +1,28 @@
+From: Mohammed Hassan <mohammed.hassan@jolla.com>
+Date: Fri, 29 Jul 2016 11:26:06 +0300
+Subject: [camera] Account for errors reported by camera source. Contributes to
+ JB#35616
+
+There are errors which can occur during manipulating camera HW.
+camerabin does not relay any errors and it is the responsibility of camerabin
+user to handle those errors. We just react to them and propagate them farther.
+
+Origin: backport, https://git.sailfishos.org/mer-core/qtmultimedia/commit/1f90ee55180935be4689950ce8d86fec5cd9a173
+Last-updated: 2019-09-16
+---
+
+Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/plugins/gstreamer/camerabin/camerabinsession.cpp
++++ qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+@@ -1048,8 +1048,9 @@ bool CameraBinSession::processBusMessage
+ #endif
+             }
+ 
+-            // Only report error messages from camerabin or video source
++            // Only report error messages from camerabin, camera source or video source
+             if (GST_MESSAGE_SRC(gm) == GST_OBJECT_CAST(m_camerabin)
++                || GST_MESSAGE_SRC(gm) == GST_OBJECT_CAST(m_cameraSrc)
+                 || GST_MESSAGE_SRC(gm) == GST_OBJECT_CAST(m_videoSrc)) {
+                 if (message.isEmpty())
+                     message = tr("Camera error");

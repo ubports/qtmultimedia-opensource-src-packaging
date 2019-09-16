@@ -1,0 +1,102 @@
+From: Mohammed Hassan <mohammed.hassan@jolla.com>
+Date: Thu, 30 Jun 2016 02:42:02 +0300
+Subject: nemo: Add basic ready-for-capture handling to CameraBinSession
+
+This property is provided and controlled by the camera source and should be used to tell
+whether the camera source can capture more or not
+
+Origin: backport, https://git.sailfishos.org/mer-core/qtmultimedia/commit/b04854b48920f9d3fa72f2b271b361a6f1805004
+Last-updated: 2019-09-16
+---
+
+Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/plugins/gstreamer/camerabin/camerabinsession.cpp
++++ qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+@@ -124,6 +124,7 @@ CameraBinSession::CameraBinSession(GstEl
+      m_pendingState(QCamera::UnloadedState),
+      m_muted(false),
+      m_busy(false),
++     m_readyForCapture(false),
+      m_captureMode(QCamera::CaptureStillImage),
+      m_audioInputFactory(0),
+      m_videoInputFactory(0),
+@@ -546,6 +547,8 @@ GstElement *CameraBinSession::buildCamer
+ 
+     if (m_cameraSrc != camSrc) {
+         g_object_set(G_OBJECT(m_camerabin), CAMERA_SOURCE_PROPERTY, m_cameraSrc, NULL);
++        g_signal_connect(G_OBJECT(m_cameraSrc), "notify::ready-for-capture", G_CALLBACK(updateReadyForCapture), this);
++
+         // Unref only if camSrc is not m_cameraSrc to prevent double unrefing.
+         if (camSrc)
+             gst_object_unref(GST_OBJECT(camSrc));
+@@ -889,6 +892,11 @@ bool CameraBinSession::isBusy() const
+     return m_busy;
+ }
+ 
++bool CameraBinSession::isReadyForCapture() const
++{
++    return m_readyForCapture;
++}
++
+ void CameraBinSession::updateBusyStatus(GObject *o, GParamSpec *p, gpointer d)
+ {
+     Q_UNUSED(p);
+@@ -906,6 +914,21 @@ void CameraBinSession::updateBusyStatus(
+     }
+ }
+ 
++void CameraBinSession::updateReadyForCapture(GObject *o, GParamSpec *p, gpointer d)
++{
++    Q_UNUSED(o);
++    Q_UNUSED(p);
++
++    CameraBinSession *session = reinterpret_cast<CameraBinSession *>(d);
++    gboolean ready = false;
++    g_object_get(o, "ready-for-capture", &ready, NULL);
++    if (session->m_readyForCapture != ready) {
++        session->m_readyForCapture = ready;
++        QMetaObject::invokeMethod(session, "handleReadyForCaptureChanged",
++                                  Qt::QueuedConnection, Q_ARG(bool, ready));
++    }
++}
++
+ qint64 CameraBinSession::duration() const
+ {
+     if (m_camerabin) {
+Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.h
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/plugins/gstreamer/camerabin/camerabinsession.h
++++ qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinsession.h
+@@ -152,6 +152,7 @@ public:
+     QCamera::Status status() const;
+     QCamera::State pendingState() const;
+     bool isBusy() const;
++    bool isReadyForCapture() const;
+ 
+     qint64 duration() const;
+ 
+@@ -178,6 +179,7 @@ signals:
+     void viewfinderChanged();
+     void readyChanged(bool);
+     void busyChanged(bool);
++    void handleReadyForCaptureChanged(bool);
+ 
+ public slots:
+     void setDevice(const QString &device);
+@@ -205,6 +207,7 @@ private:
+     void setAudioCaptureCaps();
+     GstCaps *supportedCaps(QCamera::CaptureModes mode) const;
+     static void updateBusyStatus(GObject *o, GParamSpec *p, gpointer d);
++    static void updateReadyForCapture(GObject *o, GParamSpec *p, gpointer d);
+ 
+     QString currentContainerFormat() const;
+ 
+@@ -220,6 +223,7 @@ private:
+     QString m_inputDevice;
+     bool m_muted;
+     bool m_busy;
++    bool m_readyForCapture;
+     QMediaStorageLocation m_mediaStorageLocation;
+ 
+     QCamera::CaptureModes m_captureMode;

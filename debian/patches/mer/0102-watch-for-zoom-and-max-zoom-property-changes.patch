@@ -1,0 +1,83 @@
+From: Mohammed Hassan <mohammed.hassan@jolla.com>
+Date: Thu, 5 Mar 2015 19:35:11 +0200
+Subject: watch for zoom and max-zoom property changes.
+
+camerabin can signal a change in those properties and we need to communicate those back to the application
+
+Origin: backport, https://git.sailfishos.org/mer-core/qtmultimedia/commit/a824c2da1a84b4d370c3ef8a4e7a7b66b6978b6b
+Last-updated: 2019-09-16
+---
+ .../gstreamer/camerabin/camerabinzoom.cpp     | 32 ++++++++++++++++++-
+ .../gstreamer/camerabin/camerabinzoom.h       |  4 +++
+ 2 files changed, 35 insertions(+), 1 deletion(-)
+
+Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinzoom.cpp
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/plugins/gstreamer/camerabin/camerabinzoom.cpp
++++ qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinzoom.cpp
+@@ -51,7 +51,9 @@ CameraBinZoom::CameraBinZoom(CameraBinSe
+     , m_requestedOpticalZoom(1.0)
+     , m_requestedDigitalZoom(1.0)
+ {
+-
++    GstElement *camerabin = m_session->cameraBin();
++    g_signal_connect(G_OBJECT(camerabin), "notify::zoom", G_CALLBACK(updateZoom), this);
++    g_signal_connect(G_OBJECT(camerabin), "notify::max-zoom", G_CALLBACK(updateMaxZoom), this);
+ }
+ 
+ CameraBinZoom::~CameraBinZoom()
+@@ -114,4 +116,32 @@ void CameraBinZoom::zoomTo(qreal optical
+         emit currentDigitalZoomChanged(digital);
+ }
+ 
++void CameraBinZoom::updateZoom(GObject *o, GParamSpec *p, gpointer d)
++{
++    Q_UNUSED(p);
++
++    gfloat zoomFactor = 1.0;
++    g_object_get(o, ZOOM_PROPERTY, &zoomFactor, NULL);
++
++    CameraBinZoom *zoom = reinterpret_cast<CameraBinZoom *>(d);
++
++    QMetaObject::invokeMethod(zoom, "currentDigitalZoomChanged",
++                              Qt::QueuedConnection,
++                              Q_ARG(qreal, zoomFactor));
++}
++
++void CameraBinZoom::updateMaxZoom(GObject *o, GParamSpec *p, gpointer d)
++{
++    Q_UNUSED(p);
++
++    gfloat zoomFactor = 1.0;
++    g_object_get(o, MAX_ZOOM_PROPERTY, &zoomFactor, NULL);
++
++    CameraBinZoom *zoom = reinterpret_cast<CameraBinZoom *>(d);
++
++    QMetaObject::invokeMethod(zoom, "maximumOpticalZoomChanged",
++                              Qt::QueuedConnection,
++                              Q_ARG(qreal, zoomFactor));
++}
++
+ QT_END_NAMESPACE
+Index: qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinzoom.h
+===================================================================
+--- qtmultimedia-opensource-src-packaging.orig/src/plugins/gstreamer/camerabin/camerabinzoom.h
++++ qtmultimedia-opensource-src-packaging/src/plugins/gstreamer/camerabin/camerabinzoom.h
+@@ -41,6 +41,7 @@
+ #define CAMERABINZOOMCONTROL_H
+ 
+ #include <qcamerazoomcontrol.h>
++#include <gst/gst.h>
+ 
+ QT_BEGIN_NAMESPACE
+ 
+@@ -64,6 +65,9 @@ public:
+     void zoomTo(qreal optical, qreal digital) override;
+ 
+ private:
++    static void updateZoom(GObject *o, GParamSpec *p, gpointer d);
++    static void updateMaxZoom(GObject *o, GParamSpec *p, gpointer d);
++
+     CameraBinSession *m_session;
+     qreal m_requestedOpticalZoom;
+     qreal m_requestedDigitalZoom;
