@@ -18,3 +18,4 @@ mer/0105-nemo-Add-support-for-camera-torch-mode.patch
 mer/0106-nemo-Add-basic-ready-for-capture-handling-to-CameraB.patch
 mer/0107-nemo-gstreamer-take-into-account-ready-for-capture-p.patch
 mer/0108-camera-Account-for-errors-reported-by-camera-source..patch
+sync-headers.patch
