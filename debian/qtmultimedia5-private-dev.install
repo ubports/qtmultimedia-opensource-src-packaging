@@ -1,0 +1,6 @@
+usr/include/*/qt5/QtMultimedia/*/QtMultimedia/private/
+usr/include/*/qt5/QtMultimediaWidgets/*/QtMultimediaWidgets/private/
+usr/include/*/qt5/QtMultimediaQuick_p/
+usr/lib/*/qt5/mkspecs/modules/qt_lib_multimedia_private.pri
+usr/lib/*/qt5/mkspecs/modules/qt_lib_qtmultimediaquicktools_private.pri
+usr/lib/*/qt5/mkspecs/modules/qt_lib_multimediawidgets_private.pri

@@ -41,16 +41,6 @@ override_dh_auto_test-indep:
 override_dh_auto_install-arch:
 	dh_auto_install
 
-	# Remove private headers.
-	rm -rfv debian/tmp/usr/include/$(DEB_HOST_MULTIARCH)/qt5/QtMultimedia/*/QtMultimedia/private
-	rm -rfv debian/tmp/usr/include/$(DEB_HOST_MULTIARCH)/qt5/QtMultimediaWidgets/*/QtMultimediaWidgets/private
-	rm -rfv debian/tmp/usr/include/$(DEB_HOST_MULTIARCH)/qt5/QtMultimediaQuick_p
-
-	# Remove some other private stuff.
-	rm -fv debian/tmp/usr/lib/*/qt5/mkspecs/modules/qt_lib_multimedia_private.pri
-	rm -fv debian/tmp/usr/lib/*/qt5/mkspecs/modules/qt_lib_qtmultimediaquicktools_private.pri
-	rm -fv debian/tmp/usr/lib/*/qt5/mkspecs/modules/qt_lib_multimediawidgets_private.pri
-	
 	# Fix wrong path in pkgconfig files
 	find $(CURDIR)/debian/tmp/usr/lib/*/pkgconfig -type f -name '*.pc' \
 	-exec sed -i -e 's/$(DEB_HOST_MULTIARCH)\/$(DEB_HOST_MULTIARCH)/$(DEB_HOST_MULTIARCH)/g' {} \;

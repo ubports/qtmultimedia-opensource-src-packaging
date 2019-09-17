@@ -153,6 +153,19 @@ Description: APIs for multimedia functionality - development files
  This package contains the development files needed to build Qt applications
  using Qt Multimedia libraries.
 
+Package: qtmultimedia5-private-dev
+Architecture: any
+Section: libdevel
+Depends: qtmultimedia5-dev (= ${binary:Version}), ${misc:Depends}
+Description: APIs for multimedia functionality - private development files
+ Qt is a cross-platform C++ application framework. Qt's primary feature
+ is its rich set of widgets that provide standard GUI functionality.
+ .
+ This package contains the private header development files for building some
+ Qt 5 applications like Qt Creator QML Designer plugin.
+ .
+ Use at your own risk.
+
 Package: qtmultimedia5-doc
 Architecture: all
 Section: doc
