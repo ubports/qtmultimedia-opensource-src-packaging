@@ -1,8 +1,38 @@
-qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid2) UNRELEASED; urgency=medium
+qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid2) xenial; urgency=medium
 
-  * 
+  * Update all patches' headers to comply with DEP-3
+  * Backport more patches from upstream Qt Multimedia
+    - upstream/0001-Remove-unreachable-code.patch
+    - upstream/0002-Gstreamer-Emit-an-error-if-QCamera-start-fails.patch
+    - upstream/0003-CameraBin-Postpone-fetching-supported-viewfinder-set.patch
+    - upstream/0007-Gstreamer-Do-not-create-video-profile-if-no-codec-pr.patch
+    - upstream/0008-Don-t-append-suggested-extension-if-filename-include.patch
+    - upstream/0010-GStreamer-support-video-orientation.patch
+    - upstream/0011-Prevent-immediate-stop-of-currently-unloading-gst-re.patch
+    Patches are applied in the same order as in upstream repository. Thus,
+    the original patches are also reordered and renamed.
+    - upstream/0004-Gstreamer-Fix-crash-when-resolution-or-frame-rates-a.patch
+    - upstream/0005-Gstreamer-Fix-gst_mini_object_unref-assertion-refcou.patch
+    - upstream/0006-Gstreamer-Set-video-profile-to-CameraBin-before-GST_.patch
+    - upstream/0009-Gstreamer-Negotiate-default-settings-before-encoding.patch
+  * Import patches from Mer's QtMultimedia
+    - mer/0101-Add-a-control-which-allows-overriding-the-gstreamer-.patch
+    - mer/0102-watch-for-zoom-and-max-zoom-property-changes.patch
+    - mer/0103-qtmultimedia-fix-capsForFormats-to-generate-caps-per.patch
+    - mer/0104-qtmultimedia-don-t-stop-the-camera-pipeline-until-it.patch
+    - mer/0105-nemo-Add-support-for-camera-torch-mode.patch
+    - mer/0106-nemo-Add-basic-ready-for-capture-handling-to-CameraB.patch
+    - mer/0107-nemo-gstreamer-take-into-account-ready-for-capture-p.patch
+    - mer/0108-camera-Account-for-errors-reported-by-camera-source..patch
+  * Run syncqt.pl to update headers
+  * Bring back qtmultimedia5-private-dev.
+    This is needed for nemo-qtmultimedia-plugins to compile as it accesses
+    the internal of the Qt Multimedia. It, in turn, is required for
+    gst-droid to run in accelarated mode and record video from camera.
+  * Drop 0008-Don-t-append-suggested-extension-if-filename-include.patch.
+    It seems to break in our use case.
 
- -- Ratchanan Srirattanamet <peathot@hotmail.com>  Mon, 09 Sep 2019 20:46:34 +0700
+ -- Ratchanan Srirattanamet <peathot@hotmail.com>  Thu, 19 Sep 2019 00:07:07 +0700
 
 qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid1) xenial; urgency=medium
 
