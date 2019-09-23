@@ -1,3 +1,8 @@
+qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid3) UNRELEASED; urgency=medium
+
+
+ -- Ratchanan Srirattanamet <peathot@hotmail.com>  Tue, 24 Sep 2019 00:19:29 +0700
+
 qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid2) xenial; urgency=medium
 
   * Update all patches' headers to comply with DEP-3
