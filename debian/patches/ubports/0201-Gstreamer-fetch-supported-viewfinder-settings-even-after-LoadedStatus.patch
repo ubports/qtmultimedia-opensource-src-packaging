@@ -1,0 +1,30 @@
+From: Ratchanan Srirattanamet <peathot@hotmail.com>
+Date: Wed, 25 Sep 2019 16:12:18 +0700
+Subject: CameraBin: do fetch viewfinder settings even after LoadedStatus
+
+Commit 84d0d87699a2a92b3207beae30a52f25e23acb65 (CameraBin: Postpone
+fetching supported viewfinder settings) checks if the camera is in
+LoadedStatus before fetching supported viewfinder settings. However, if
+viewfinder settings is never requested or not (yet) available during
+LoadedStatus, it won't try to fetch it at e.g. ActiveStatus. In that
+case, requesting supported viewfinder settings never works.
+
+[ChangeLog][CameraBin] CameraBin plugin now fetches supported viewfinder
+settings at status higher or equal to LoadedStatus if it has not been
+fetched.
+
+Change-Id: Ibd32c25feac9b1a133945e754d26181937190a24
+Forwarded: https://codereview.qt-project.org/c/qt/qtmultimedia/+/275122
+Applied-Upstream: 5.13.2, https://code.qt.io/cgit/qt/qtmultimedia.git/commit/?h=5.13&id=d34c71a67c9a30ab67da0b6ad11c198bfe2b242d
+Last-Update: 2019-09-30
+--- a/src/plugins/gstreamer/camerabin/camerabinsession.cpp
++++ b/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+@@ -709,7 +709,7 @@
+ 
+ QList<QCameraViewfinderSettings> CameraBinSession::supportedViewfinderSettings() const
+ {
+-    if (m_status == QCamera::LoadedStatus && m_supportedViewfinderSettings.isEmpty()) {
++    if (m_status >= QCamera::LoadedStatus && m_supportedViewfinderSettings.isEmpty()) {
+         m_supportedViewfinderSettings =
+             capsToViewfinderSettings(supportedCaps(QCamera::CaptureViewfinder));
+     }

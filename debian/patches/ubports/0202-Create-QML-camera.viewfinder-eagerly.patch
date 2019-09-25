@@ -1,0 +1,46 @@
+From: Ratchanan Srirattanamet <peathot@hotmail.com>
+Date: Wed, 25 Sep 2019 17:17:12 +0700
+Subject: Create QML camera.viewfinder eagerly
+
+QDeclarativeCameraViewfinder connects to QCamera's statusChanged() to
+update its chached settings when the status becomes LoadedStatus or
+ActiveStatus. However, it's updated after QDeclarativeCamera has
+signaled cameraStatusChanged because QDeclarativeCameraViewfinder
+connects the that signal after QDeclarativeCamera, making those
+connected to cameraSignalChanged still receiving old values despite
+camera.cameraStatus already changed.
+
+This commit moves the creation of QDeclarativeCameraViewfinder into
+the constructor of QDeclarativeCamera, before the later connects
+to signals. This make values in camera.viewfinder reflects the correct
+value by the time cameraStatusChanged is signaled.
+
+A side effect of this change is that camera.viewfinder.resolutionChanged
+and similar signals will be signaled before camera.cameraStatusChanged.
+This might not be as bad as it seems; if the user of resolutionChanged
+checks camera.cameraStatus, the value will be correct anyway as it's not
+cached.
+
+Change-Id: Ief0c3d55e441cc872d37de937ba54fed0f2b877d
+Forwarded: https://codereview.qt-project.org/c/qt/qtmultimedia/+/275192
+Last-updated: 2019-09-25
+--- a/src/imports/multimedia/qdeclarativecamera.cpp
++++ b/src/imports/multimedia/qdeclarativecamera.cpp
+@@ -190,6 +190,7 @@
+     m_flash = new QDeclarativeCameraFlash(m_camera);
+     m_focus = new QDeclarativeCameraFocus(m_camera);
+     m_imageProcessing = new QDeclarativeCameraImageProcessing(m_camera);
++    m_viewfinder = new QDeclarativeCameraViewfinder(m_camera);
+ 
+     connect(m_camera, SIGNAL(captureModeChanged(QCamera::CaptureModes)),
+             this, SIGNAL(captureModeChanged()));
+@@ -960,9 +961,6 @@
+ 
+ QDeclarativeCameraViewfinder *QDeclarativeCamera::viewfinder()
+ {
+-    if (!m_viewfinder)
+-        m_viewfinder = new QDeclarativeCameraViewfinder(m_camera);
+-
+     return m_viewfinder;
+ }
+ 
