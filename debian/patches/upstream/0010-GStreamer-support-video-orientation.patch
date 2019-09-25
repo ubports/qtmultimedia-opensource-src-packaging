@@ -4,7 +4,7 @@ Subject: GStreamer: support video orientation
 
 Change-Id: I233c45824f517c185cb245d8a7d77cab8551fc51
 Reviewed-by: VaL Doroshchuk <valentyn.doroshchuk@qt.io>
-Origin: backport, https://code.qt.io/cgit/qt/qtmultimedia.git/commit?c877776c354a625373e1dc0f38ac4918da9a056f
+Origin: backport, https://code.qt.io/cgit/qt/qtmultimedia.git/commit?id=c877776c354a625373e1dc0f38ac4918da9a056f
 Last-updated: 2019-09-10
 ---
 

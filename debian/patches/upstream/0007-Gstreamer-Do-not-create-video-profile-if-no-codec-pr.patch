@@ -6,7 +6,7 @@ Since camerabin2 requires not empty caps (format) in gst_encoding_video_profile.
 
 Change-Id: Iba073138321635a51c9364d54ec95707ccbc7445
 Reviewed-by: Christian Stromme <christian.stromme@qt.io>
-Origin: upstream, https://code.qt.io/cgit/qt/qtmultimedia.git/commit?cce3e8a019a3272ff422b1cdb1ce11bb7b00feea
+Origin: upstream, https://code.qt.io/cgit/qt/qtmultimedia.git/commit?id=cce3e8a019a3272ff422b1cdb1ce11bb7b00feea
 Last-updated: 2019-09-09
 ---
  .../gstreamer/camerabin/camerabinvideoencoder.cpp     | 11 ++++-------

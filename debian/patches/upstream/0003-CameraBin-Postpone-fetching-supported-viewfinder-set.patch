@@ -11,7 +11,7 @@ Task-number: QTBUG-67920
 Change-Id: I7734ef96c98b2c425714eacc1fd1222fd7ee5c44
 Reviewed-by: Christian Stromme <christian.stromme@qt.io>
 Bug: https://bugreports.qt.io/browse/QTBUG-67920
-Origin: upstream, https://code.qt.io/cgit/qt/qtmultimedia.git/commit?84d0d87699a2a92b3207beae30a52f25e23acb65
+Origin: upstream, https://code.qt.io/cgit/qt/qtmultimedia.git/commit?id=84d0d87699a2a92b3207beae30a52f25e23acb65
 Last-updated: 2019-09-10
 ---
  .../gstreamer/camerabin/camerabinsession.cpp  | 80 ++++++++++---------

@@ -13,7 +13,7 @@ Task-number: QTBUG-51825
 Change-Id: I6ac936d2728213a4a64f3e4eb25ae2e2f109acca
 Reviewed-by: Christian Stromme <christian.stromme@qt.io>
 Bug: https://bugreports.qt.io/browse/QTBUG-51825
-Origin: upstream, https://code.qt.io/cgit/qt/qtmultimedia.git/commit?d49abfda2f5bbf15de3a5133c77d5115a75b3c2b
+Origin: upstream, https://code.qt.io/cgit/qt/qtmultimedia.git/commit?id=d49abfda2f5bbf15de3a5133c77d5115a75b3c2b
 Last-updated: 2019-09-09
 ---
  .../gstreamer/camerabin/camerabinsession.cpp       | 14 +++++++++++---

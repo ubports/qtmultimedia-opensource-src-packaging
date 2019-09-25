@@ -10,7 +10,7 @@ Task-number: QTBUG-65398
 Change-Id: Ieac72967311bdd3bafae60bc1d0da9d227a6c237
 Reviewed-by: VaL Doroshchuk <valentyn.doroshchuk@qt.io>
 Bug: https://bugreports.qt.io/browse/QTBUG-65398
-Origin: upstream, https://code.qt.io/cgit/qt/qtmultimedia.git/commit?b1a0bc9d454793d705a4aba84b301d3f8dfb50ea
+Origin: upstream, https://code.qt.io/cgit/qt/qtmultimedia.git/commit?id=b1a0bc9d454793d705a4aba84b301d3f8dfb50ea
 Last-updated: 2019-09-11
 ---
  src/plugins/gstreamer/camerabin/camerabincontrol.cpp | 2 +-
