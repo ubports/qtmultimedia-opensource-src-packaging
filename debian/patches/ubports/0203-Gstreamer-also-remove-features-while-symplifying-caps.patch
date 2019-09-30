@@ -1,0 +1,52 @@
+From: Ratchanan Srirattanamet <peathot@hotmail.com>
+Date: Fri, 27 Sep 2019 23:31:57 +0700
+Subject: Gstreamer: also remove features when simplifying caps
+
+Some element can return caps with same resolution/framerate but
+different features. gst_simplify_caps() won't de-duplicate this,
+resulting in duplicated entries for the same resolution/framerate.
+
+This commit add calls to also remove features from the caps in addition
+to setting name to video/x-raw.
+
+The GST_CHECK_VERSION macro is added to maintain compatibility with
+earlier version of Gstreamer without GstCapsFeatures.
+
+[ChangeLog][CameraBin] Fixed duplicated entries in supported resolution/
+framerate if the underlying element uses caps' features.
+
+Change-Id: I15101899eb0369925013ccc1d925afb890a01205
+Forwarded: https://codereview.qt-project.org/c/qt/qtmultimedia/+/275507
+Applied-Upstream: 5.13.2, https://code.qt.io/cgit/qt/qtmultimedia.git/commit/?h=5.13&id=182b4b56011b70fa9afdedf53d3c25f73028c335
+Last-Update: 2019-10-04
+---
+ src/plugins/gstreamer/camerabin/camerabinsession.cpp | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/plugins/gstreamer/camerabin/camerabinsession.cpp b/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+index b96ba679..3e505a41 100644
+--- a/src/plugins/gstreamer/camerabin/camerabinsession.cpp
++++ b/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+@@ -1312,6 +1312,9 @@ QList< QPair<int,int> > CameraBinSession::supportedFrameRates(const QSize &frame
+     for (uint i=0; i<gst_caps_get_size(caps); i++) {
+         GstStructure *structure = gst_caps_get_structure(caps, i);
+         gst_structure_set_name(structure, "video/x-raw");
++#if GST_CHECK_VERSION(1,2,0)
++        gst_caps_set_features(caps, i, NULL);
++#endif
+         const GValue *oldRate = gst_structure_get_value(structure, "framerate");
+         if (!oldRate)
+             continue;
+@@ -1424,6 +1427,9 @@ QList<QSize> CameraBinSession::supportedResolutions(QPair<int,int> rate,
+     for (uint i=0; i<gst_caps_get_size(caps); i++) {
+         GstStructure *structure = gst_caps_get_structure(caps, i);
+         gst_structure_set_name(structure, "video/x-raw");
++#if GST_CHECK_VERSION(1,2,0)
++        gst_caps_set_features(caps, i, NULL);
++#endif
+         const GValue *oldW = gst_structure_get_value(structure, "width");
+         const GValue *oldH = gst_structure_get_value(structure, "height");
+         if (!oldW || !oldH)
+-- 
+2.17.1
+
