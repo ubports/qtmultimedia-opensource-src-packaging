@@ -1,7 +1,16 @@
-qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid3) UNRELEASED; urgency=medium
+qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid3) xenial; urgency=medium
 
+  * Update Jenkinsfile to archive ddebs
+  * Add patches to fix viewfinder resolution handling
+    - debian/patches/ubports/0201-Gstreamer-fetch-supported-viewfinder-
+      settings-even-after-LoadedStatus.patch
+    - debian/patches/ubports/0202-Create-QML-camera.viewfinder-eagerly.patch
+  * Fix up origin URL error in some upstream patches
+  * Add a patch to fix duplicated supported resolution entries
+    - debian/patches/ubports/0203-Gstreamer-also-remove-features-while-
+      symplifying-caps.patch
 
- -- Ratchanan Srirattanamet <peathot@hotmail.com>  Tue, 24 Sep 2019 00:19:29 +0700
+ -- Ratchanan Srirattanamet <peathot@hotmail.com>  Fri, 04 Oct 2019 15:26:07 +0700
 
 qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid2) xenial; urgency=medium
 
