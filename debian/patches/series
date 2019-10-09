@@ -6,9 +6,8 @@ upstream/0004-Gstreamer-Fix-crash-when-resolution-or-frame-rates-a.patch
 upstream/0005-Gstreamer-Fix-gst_mini_object_unref-assertion-refcou.patch
 upstream/0006-Gstreamer-Set-video-profile-to-CameraBin-before-GST_.patch
 upstream/0007-Gstreamer-Do-not-create-video-profile-if-no-codec-pr.patch
-upstream/0009-Gstreamer-Negotiate-default-settings-before-encoding.patch
-upstream/0010-GStreamer-support-video-orientation.patch
-upstream/0011-Prevent-immediate-stop-of-currently-unloading-gst-re.patch
+upstream/0008-Gstreamer-Negotiate-default-settings-before-encoding.patch
+upstream/0009-Prevent-immediate-stop-of-currently-unloading-gst-re.patch
 mer/0101-Add-a-control-which-allows-overriding-the-gstreamer-.patch
 mer/0102-watch-for-zoom-and-max-zoom-property-changes.patch
 mer/0103-qtmultimedia-fix-capsForFormats-to-generate-caps-per.patch
