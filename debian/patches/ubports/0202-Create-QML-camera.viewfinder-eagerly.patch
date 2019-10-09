@@ -23,7 +23,8 @@ cached.
 
 Change-Id: Ief0c3d55e441cc872d37de937ba54fed0f2b877d
 Forwarded: https://codereview.qt-project.org/c/qt/qtmultimedia/+/275192
-Last-updated: 2019-09-25
+Applied-Upstream: 5.13.3, https://code.qt.io/cgit/qt/qtmultimedia.git/commit/?h=5.13&id=56d430962a50af234902cd799920a5b6df6d80eb
+Last-updated: 2019-10-10
 --- a/src/imports/multimedia/qdeclarativecamera.cpp
 +++ b/src/imports/multimedia/qdeclarativecamera.cpp
 @@ -190,6 +190,7 @@
