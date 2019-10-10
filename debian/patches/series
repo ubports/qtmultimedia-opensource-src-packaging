@@ -19,4 +19,5 @@ mer/0108-camera-Account-for-errors-reported-by-camera-source..patch
 ubports/0201-Gstreamer-fetch-supported-viewfinder-settings-even-after-LoadedStatus.patch
 ubports/0202-Create-QML-camera.viewfinder-eagerly.patch
 ubports/0203-Gstreamer-also-remove-features-while-symplifying-caps.patch
+ubports/0204-Gstreamer-filter-image-orientation-tag-at-viewfinder-pad.patch
 sync-headers.patch
