@@ -11,7 +11,6 @@ upstream/0009-Prevent-immediate-stop-of-currently-unloading-gst-re.patch
 mer/0101-Add-a-control-which-allows-overriding-the-gstreamer-.patch
 mer/0102-watch-for-zoom-and-max-zoom-property-changes.patch
 mer/0103-qtmultimedia-fix-capsForFormats-to-generate-caps-per.patch
-mer/0104-qtmultimedia-don-t-stop-the-camera-pipeline-until-it.patch
 mer/0105-nemo-Add-support-for-camera-torch-mode.patch
 mer/0106-nemo-Add-basic-ready-for-capture-handling-to-CameraB.patch
 mer/0107-nemo-gstreamer-take-into-account-ready-for-capture-p.patch
