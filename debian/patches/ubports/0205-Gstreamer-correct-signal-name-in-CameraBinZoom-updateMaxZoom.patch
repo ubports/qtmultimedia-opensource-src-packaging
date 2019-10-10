@@ -1,0 +1,21 @@
+From: Ratchanan Srirattanamet <ratchanan@ubports.com>
+Date: Thu, 10 Oct 2019 21:58:05 +0700
+Subject: Gstreamer: correct signal name in CameraBinZoom::updateZoom
+
+updateZoom() is supposed to notify the change in maximum digital zoom.
+Instead of emitting "currentDigitalZoomChanged", it emits "maximum
+OpticalZoomChanged" signal instead.
+
+Forwarded: https://git.sailfishos.org/mer-core/qtmultimedia/merge_requests/29
+Last-Update: 2019-10-10
+--- a/src/plugins/gstreamer/camerabin/camerabinzoom.cpp
++++ b/src/plugins/gstreamer/camerabin/camerabinzoom.cpp
+@@ -139,7 +139,7 @@
+ 
+     CameraBinZoom *zoom = reinterpret_cast<CameraBinZoom *>(d);
+ 
+-    QMetaObject::invokeMethod(zoom, "maximumOpticalZoomChanged",
++    QMetaObject::invokeMethod(zoom, "maximumDigitalZoomChanged",
+                               Qt::QueuedConnection,
+                               Q_ARG(qreal, zoomFactor));
+ }
