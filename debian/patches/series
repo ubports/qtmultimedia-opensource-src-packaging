@@ -20,4 +20,6 @@ ubports/0202-Create-QML-camera.viewfinder-eagerly.patch
 ubports/0203-Gstreamer-also-remove-features-while-symplifying-caps.patch
 ubports/0204-Gstreamer-filter-image-orientation-tag-at-viewfinder-pad.patch
 ubports/0205-Gstreamer-correct-signal-name-in-CameraBinZoom-updateMaxZoom.patch
+ubports/0206-Gstreamer-handle-delayed-camera-unload-in-addition-t.patch
+ubports/0207-Ubuntu-Touch-stop-the-camera-when-application-becomes-inactive.patch
 sync-headers.patch

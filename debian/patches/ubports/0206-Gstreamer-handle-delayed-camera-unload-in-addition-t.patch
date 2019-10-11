@@ -1,0 +1,71 @@
+From: Ratchanan Srirattanamet <ratchanan@ubports.com>
+Date: Fri, 11 Oct 2019 16:05:37 +0700
+Subject: Gstreamer: handle delayed camera unload() in addition to stop()
+
+Commit b1a0bc9d454793d705a4aba84b301d3f8dfb50ea (Prevent immediate-stop
+of currently-unloading gst recording pipeline) make sure that CameraBin
+Control will delay QCamera::unload() if the camera is busy. However, it
+didn't update the handleBusyChanged() to also do the unload when busy
+status changed.
+
+This commit make handleBusyChanged() to handle both delayed stop() and
+delayed unload(). This make sure that if unload() is called when the
+camera is busy, it will eventually be unloaded.
+
+Also update the log message to properly print the delayed action.
+
+Task-number: QTBUG-65398
+Change-Id: I2a752265fb082fbc3feb895f1cf904202df155c9
+Bug: https://bugreports.qt.io/browse/QTBUG-65398
+Forwarded: no
+Last-Update: 2019-10-11
+---
+ .../gstreamer/camerabin/camerabincontrol.cpp  | 25 ++++++++++++++-----
+ 1 file changed, 19 insertions(+), 6 deletions(-)
+
+diff --git a/src/plugins/gstreamer/camerabin/camerabincontrol.cpp b/src/plugins/gstreamer/camerabin/camerabincontrol.cpp
+index fdf3ff4a..83d49c86 100644
+--- a/src/plugins/gstreamer/camerabin/camerabincontrol.cpp
++++ b/src/plugins/gstreamer/camerabin/camerabincontrol.cpp
+@@ -125,7 +125,9 @@ void CameraBinControl::setState(QCamera::State state)
+                 m_session->status() == QCamera::ActiveStatus &&
+                 m_session->isBusy()) {
+ #ifdef CAMEABIN_DEBUG
+-            qDebug() << Q_FUNC_INFO << "Camera is busy, QCamera::stop() is delayed";
++            qDebug() << Q_FUNC_INFO << "Camera is busy,"
++                     << state == QCamera::LoadedState ? "QCamera::stop()" : "QCamera::unload()"
++                     << "is delayed";
+ #endif
+             emit stateChanged(m_state);
+             return;
+@@ -218,11 +220,22 @@ void CameraBinControl::handleResourcesGranted()
+ void CameraBinControl::handleBusyChanged(bool busy)
+ {
+     if (!busy && m_session->status() == QCamera::ActiveStatus) {
+-        if (m_state == QCamera::LoadedState) {
+-            //handle delayed stop() because of busy camera
+-            m_resourcePolicy->setResourceSet(CamerabinResourcePolicy::LoadedResources);
+-            m_session->setState(QCamera::LoadedState);
+-        } else if (m_state == QCamera::ActiveState && m_reloadPending) {
++        if (m_state != QCamera::ActiveState) {
++            //handle delayed stop()/unload() because of busy camera
++
++            CamerabinResourcePolicy::ResourceSet resourceSet = CamerabinResourcePolicy::NoResources;
++            switch (m_state) {
++            case QCamera::UnloadedState:
++                resourceSet = CamerabinResourcePolicy::NoResources;
++                break;
++            case QCamera::LoadedState:
++                resourceSet = CamerabinResourcePolicy::LoadedResources;
++                break;
++            }
++
++            m_resourcePolicy->setResourceSet(resourceSet);
++            m_session->setState(m_state);
++        } else if (m_reloadPending) {
+             //handle delayed reload because of busy camera
+             m_session->setState(QCamera::LoadedState);
+             QMetaObject::invokeMethod(this, "delayedReload", Qt::QueuedConnection);
+-- 
+2.17.1
+

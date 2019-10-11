@@ -1,0 +1,172 @@
+Description: Ubuntu Touch: stop the camera when application becomes inactive
+ Ubuntu Touch will stop the application with SIGSTOP when switching the
+ application to background. To make sure camera is in sane state, and to
+ allow another app getting to foreground to use the camera, the CameraBin
+ Control will listen to the application state and unload the camera when
+ the application becomes inactive.
+ 
+ CameraBinRecorder will also listen to the state of the application and
+ stop the recording if the application become inactive. This ensure that
+ we'll be able to unload the camera. When the application becomes active
+ again, the recording won't be restarted to prevent confusion.
+
+ This patch is Ubuntu Touch specific, thus it shouldn't be forwarded to
+ the upstream. However, other distributions are welcome to incorporate
+ this patch.
+Author: Ratchanan Srirattanamet <ratchanan@ubports.com>
+Forwarded: not-needed
+Last-Update: 2019-10-11
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/plugins/gstreamer/camerabin/camerabincontrol.cpp
++++ b/src/plugins/gstreamer/camerabin/camerabincontrol.cpp
+@@ -48,6 +48,7 @@
+ #include <QtCore/qdebug.h>
+ #include <QtCore/qfile.h>
+ #include <QtCore/qmetaobject.h>
++#include <QtGui/qguiapplication.h>
+ 
+ QT_BEGIN_NAMESPACE
+ 
+@@ -58,6 +59,7 @@
+     :QCameraControl(session),
+     m_session(session),
+     m_state(QCamera::UnloadedState),
++    m_savedState(-1),
+     m_reloadPending(false)
+ {
+     connect(m_session, SIGNAL(statusChanged(QCamera::Status)),
+@@ -80,6 +82,11 @@
+ 
+     connect(m_session, SIGNAL(busyChanged(bool)),
+             SLOT(handleBusyChanged(bool)));
++
++    if (qApp) {
++        connect(qApp, SIGNAL(applicationStateChanged(Qt::ApplicationState)),
++                this, SLOT(handleApplicationStateChanged(Qt::ApplicationState)));
++    }
+ }
+ 
+ CameraBinControl::~CameraBinControl()
+@@ -113,9 +120,29 @@
+ 
+ void CameraBinControl::setState(QCamera::State state)
+ {
++    // If the application is inactive, the camera shouldn't be started. Save the desired state
++    // instead and it will be set when the application becomes active.
++    if (qApp && qApp->applicationState() != Qt::ApplicationActive) {
++#ifdef CAMEABIN_DEBUG
++        qDebug() << Q_FUNC_INFO << "Application is not active, state change to"
++                 << ENUM_NAME(QCamera, "State", state) << "is delayed."
++#endif
++        m_savedState = state;
++        return;
++    }
++
++    doSetState(state);
++}
++
++// doSetState is required to allow handleApplicationStateChanged() to circumvent
++// application state check.
++
++void CameraBinControl::doSetState(QCamera::State state)
++{
+ #ifdef CAMEABIN_DEBUG
+     qDebug() << Q_FUNC_INFO << ENUM_NAME(QCamera, "State", state);
+ #endif
++
+     if (m_state != state) {
+         m_state = state;
+ 
+@@ -303,4 +330,23 @@
+     g_object_set(G_OBJECT(m_session->cameraBin()), "flags", flags, NULL);
+ }
+ 
++void CameraBinControl::handleApplicationStateChanged(Qt::ApplicationState appState) {
++    switch (appState) {
++    case Qt::ApplicationInactive:
++        if (m_state != QCamera::UnloadedState) {
++            m_savedState = m_state;
++            doSetState(QCamera::UnloadedState);
++        }
++        break;
++    case Qt::ApplicationActive:
++        if (m_savedState != -1) {
++            doSetState(QCamera::State(m_savedState));
++            m_savedState = -1;
++        }
++        break;
++    default:
++        break;
++    }
++}
++
+ QT_END_NAMESPACE
+--- a/src/plugins/gstreamer/camerabin/camerabincontrol.h
++++ b/src/plugins/gstreamer/camerabin/camerabincontrol.h
+@@ -86,11 +86,15 @@
+     void handleBusyChanged(bool);
+     void handleCameraError(int error, const QString &errorString);
+ 
++    void handleApplicationStateChanged(Qt::ApplicationState state);
++
+ private:
+     void updateSupportedResolutions(const QString &device);
++    void doSetState(QCamera::State state);
+ 
+     CameraBinSession *m_session;
+     QCamera::State m_state;
++    int m_savedState;
+     CamerabinResourcePolicy *m_resourcePolicy;
+ 
+     bool m_reloadPending;
+--- a/src/plugins/gstreamer/camerabin/camerabinrecorder.cpp
++++ b/src/plugins/gstreamer/camerabin/camerabinrecorder.cpp
+@@ -44,6 +44,7 @@
+ #include "camerabinvideoencoder.h"
+ #include "camerabincontainer.h"
+ #include <QtCore/QDebug>
++#include <QtGui/qguiapplication.h>
+ 
+ 
+ QT_BEGIN_NAMESPACE
+@@ -62,6 +63,11 @@
+     connect(m_session, SIGNAL(mutedChanged(bool)), this, SIGNAL(mutedChanged(bool)));
+     connect(m_session->cameraControl()->resourcePolicy(), SIGNAL(canCaptureChanged()),
+             this, SLOT(updateStatus()));
++
++    if (qApp) {
++        connect(qApp, SIGNAL(applicationStateChanged(Qt::ApplicationState)),
++                this, SLOT(handleApplicationStateChanged(Qt::ApplicationState)));
++    }
+ }
+ 
+ CameraBinRecorder::~CameraBinRecorder()
+@@ -294,5 +300,15 @@
+         qWarning() << "Media service doesn't support recorder audio gain.";
+ }
+ 
++void CameraBinRecorder::handleApplicationStateChanged(Qt::ApplicationState appState) {
++    // Make sure we can stop camera. See CameraBinControl.
++    // Later, when the app become active again, don't restart the recording
++    // as it will confuse the user.
++
++    if (appState == Qt::ApplicationInactive
++            && m_state != QMediaRecorder::StoppedState)
++        setState(QMediaRecorder::StoppedState);
++}
++
+ QT_END_NAMESPACE
+ 
+--- a/src/plugins/gstreamer/camerabin/camerabinrecorder.h
++++ b/src/plugins/gstreamer/camerabin/camerabinrecorder.h
+@@ -83,6 +83,9 @@
+ 
+     void updateStatus();
+ 
++private slots:
++    void handleApplicationStateChanged(Qt::ApplicationState state);
++
+ private:
+     CameraBinSession *m_session;
+     QMediaRecorder::State m_state;
