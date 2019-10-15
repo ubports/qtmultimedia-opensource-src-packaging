@@ -1,0 +1,31 @@
+Description: Gstreamer: fix the orientation of preview image
+ Users can set the orientation of the camera, which is then forwarded to
+ camerabin2 as a tag. Camerabin2 then forwards it to camera source's
+ imgsrc pad. That means the source won't receive this tag because it's
+ a downstream tag. Meanwhile, the processing of preview image happens
+ solely within the source. Thus, we have to process the preview image's
+ orientation ourselve.
+Author: Ratchanan Srirattanamet <ratchanan@ubports.com
+Forwarded: no
+Last-Update: 2019-10-15
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/plugins/gstreamer/camerabin/camerabinsession.cpp
++++ b/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+@@ -1091,6 +1091,16 @@
+             gst_buffer_unref(buffer);
+ #endif
+             if (!image.isNull()) {
++                if (m_metaData.contains(GST_TAG_IMAGE_ORIENTATION)) {
++                    int orientation = QGstUtils::fromGStreamerOrientation(
++                        m_metaData.value(GST_TAG_IMAGE_ORIENTATION)).toInt();
++                    if (orientation != 0) {
++                        QTransform rotateTransform;
++                        rotateTransform.rotate(360 - orientation);
++                        image = image.transformed(rotateTransform, Qt::FastTransformation);
++                    }
++                }
++
+                 static QMetaMethod exposedSignal = QMetaMethod::fromSignal(&CameraBinSession::imageExposed);
+                 exposedSignal.invoke(this,
+                                      Qt::QueuedConnection,

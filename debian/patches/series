@@ -23,4 +23,6 @@ ubports/0205-Gstreamer-correct-signal-name-in-CameraBinZoom-updateMaxZoom.patch
 ubports/0206-Gstreamer-handle-delayed-camera-unload-in-addition-t.patch
 ubports/0207-Ubuntu-Touch-stop-the-camera-when-application-becomes-inactive.patch
 ubports/0208-Gstreamer-emits-durationChanged-when-start-recording.patch
+ubports/0209-Gstreamer-moves-from-to-GstreamerOrientation-to-QGstUtils.patch
+ubports/0210-Gstreamer-fix-the-orientation-of-preview-image.patch
 sync-headers.patch
