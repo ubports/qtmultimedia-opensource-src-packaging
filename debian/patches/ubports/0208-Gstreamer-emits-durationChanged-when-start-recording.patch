@@ -1,0 +1,29 @@
+Description: Gstreamer: emits durationChanged() when start recording
+ To make sure that the application shows duration as 0 when start
+ recording, I make the recordVideo() method also emits durationChanged()
+ signal. This cause QML applications using this in a binding to update
+ the value and acknowledge 0.
+ 
+ This is not a complete solution. It seems like the duration() property
+ should also retains it's value when the recording stops. However, I'm
+ too lazy to investigate into that. So, let's leave it like this for now.
+Author: Ratchanan Srirattanamet <ratchanan@ubports.com>
+Forwarded: not-needed
+Last-Update: 2019-10-15
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/plugins/gstreamer/camerabin/camerabinsession.cpp
++++ b/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+@@ -1277,6 +1277,12 @@
+     g_object_set(G_OBJECT(m_camerabin), FILENAME_PROPERTY, QFile::encodeName(actualFileName).constData(), NULL);
+ 
+     g_signal_emit_by_name(G_OBJECT(m_camerabin), CAPTURE_START, NULL);
++
++    // FIXME: emit durationChanged event to tell the application that the duration
++    // has been reset.
++    // The correct implementation must retain the duration across records and reset
++    // it when the new record starts.
++    emit durationChanged(duration());
+ }
+ 
+ void CameraBinSession::stopVideoRecording()
