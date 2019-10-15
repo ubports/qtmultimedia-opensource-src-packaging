@@ -1,7 +1,39 @@
-qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid4) UNRELEASED; urgency=medium
+qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid4) xenial; urgency=medium
 
+  * Remove debian/patches/upstream/0010-GStreamer-support-video-orientation.patch and reorder patches.
+    It's about getting orientation data from video, which is not related to
+    camera. qtubuntu-media automagically rotate the video as it gets
+    orientation data, which is the same behavior as the new nemo-
+    qtmultimedia-plugins' video backend. That is, developers is never
+    expected to handle orientation themself. So, enabling this will add
+    confusions to developers.
+  * Update debian/patches/ubports/0202-Create-QML-camera.viewfinder-eagerly.patch
+    - Update upstreaming status. This patch is now applied in 5.13.
+  * Add a patch to filter "image-orientation" tag at vfsrc pad
+    - debian/patches/ubports/0204-Gstreamer-filter-image-orientation-tag-at-
+      viewfinder-pad.patch
+  * Add a patch to fix maximumDigitalZoom not working
+    - debian/patches/ubports/0205-Gstreamer-correct-signal-name-in-
+      CameraBinZoom-updateMaxZoom.patch
+  * Drop debian/patches/mer/0104-qtmultimedia-don-t-stop-the-camera-pipeline-until-it.patch.
+    Dropped because this patch is the older version of debian/patches
+    /upstream/0009-Prevent-immediate-stop-of-currently-unloading-gst-re
+    .patch.
+  * Add patches to unload camera when the app is inactive
+    - debian/patches/ubports/0206-Gstreamer-handle-delayed-camera-unload-in
+      -addition-t.patch
+    - debian/patches/ubports/0207-Ubuntu-Touch-stop-the-camera-when
+      -application-becomes-inactive.patch
+  * Make sure duration starts at 0:00 when restart recording
+    - debian/patches/ubports/0208-Gstreamer-emits-durationChanged-when-start
+      -recording.patch
+  * Make sure that the preview image's orientation matches the final image's
+    - debian/patches/ubports/0209-Gstreamer-moves-from-to-Gstreamer
+      Orientation-to-QGstUtils.patch
+    - debian/patches/ubports/0210-Gstreamer-fix-the-orientation-of-preview
+      -image.patch
 
- -- Ratchanan Srirattanamet <ratchanan@ubports.com>  Thu, 10 Oct 2019 01:01:56 +0700
+ -- Ratchanan Srirattanamet <ratchanan@ubports.com>  Tue, 15 Oct 2019 20:36:22 +0700
 
 qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid3) xenial; urgency=medium
 
