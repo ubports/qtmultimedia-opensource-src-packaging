@@ -78,26 +78,21 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
      if (m_state != state) {
          m_state = state;
  
-@@ -303,4 +330,23 @@
+@@ -303,4 +330,18 @@
      g_object_set(G_OBJECT(m_session->cameraBin()), "flags", flags, NULL);
  }
  
 +void CameraBinControl::handleApplicationStateChanged(Qt::ApplicationState appState) {
-+    switch (appState) {
-+    case Qt::ApplicationInactive:
++    if (appState != Qt::ApplicationActive) {
 +        if (m_state != QCamera::UnloadedState) {
 +            m_savedState = m_state;
 +            doSetState(QCamera::UnloadedState);
 +        }
-+        break;
-+    case Qt::ApplicationActive:
++    } else {
 +        if (m_savedState != -1) {
 +            doSetState(QCamera::State(m_savedState));
 +            m_savedState = -1;
 +        }
-+        break;
-+    default:
-+        break;
 +    }
 +}
 +
