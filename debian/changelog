@@ -1,3 +1,8 @@
+qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid5) UNRELEASED; urgency=medium
+
+
+ -- Ratchanan Srirattanamet <ratchanan@ubports.com>  Wed, 23 Oct 2019 21:42:05 +0700
+
 qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid4) xenial; urgency=medium
 
   * Remove debian/patches/upstream/0010-GStreamer-support-video-orientation.patch and reorder patches.
