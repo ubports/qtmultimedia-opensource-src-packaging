@@ -1,7 +1,16 @@
-qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid5) UNRELEASED; urgency=medium
+qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid5) xenial; urgency=medium
 
+  * Update 0207-Ubuntu-Touch-stop-the-camera-when-application-becomes-inactive.patch
+    - Detect inactivity by checking if state != active instead of state ==
+      inactive, because state can go directly from active to suspended without
+      going through inactive first.
+  * Add patches to fix first custom focus not being hornored
+    - debian/patches/ubports/0211-Gstreamer-refactor-how-focus-point-setting
+      -works.patch
+    - debian/patches/ubports/0212-Gstreamer-fix-camerabin-s-supported-focus
+      -point-mode.patch
 
- -- Ratchanan Srirattanamet <ratchanan@ubports.com>  Wed, 23 Oct 2019 21:42:05 +0700
+ -- Ratchanan Srirattanamet <ratchanan@ubports.com>  Mon, 28 Oct 2019 22:31:08 +0700
 
 qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid4) xenial; urgency=medium
 
