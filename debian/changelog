@@ -1,3 +1,8 @@
+qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid6) UNRELEASED; urgency=medium
+
+
+ -- Ratchanan Srirattanamet <ratchanan@ubports.com>  Fri, 29 Nov 2019 00:58:32 +0700
+
 qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid5) xenial; urgency=medium
 
   * Update 0207-Ubuntu-Touch-stop-the-camera-when-application-becomes-inactive.patch
