@@ -27,4 +27,5 @@ ubports/0209-Gstreamer-moves-from-to-GstreamerOrientation-to-QGstUtils.patch
 ubports/0210-Gstreamer-fix-the-orientation-of-preview-image.patch
 ubports/0211-Gstreamer-refactor-how-focus-point-setting-works.patch
 ubports/0212-Gstreamer-fix-camerabin-s-supported-focus-point-mode.patch
+ubports/0213-Gstreamer-stop-video-recording-on-audiosrc-error.patch
 sync-headers.patch

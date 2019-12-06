@@ -1,0 +1,97 @@
+Description: Gstreamer: stop video recording on audio source error
+ If a GStreamer error from the audio source element is posted on the bus,
+ camerabinrecorder will stop the video recording. However, as camerabin
+ has already start the file sink, there will be an empty or incomplete
+ file lying around anyway. At least, this is better than silently fails.
+ .
+ This also allows the user to continue using the camera for still image.
+Author: Ratchanan Srirattanamet <ratchanan@ubports.com>
+Forwarded: no
+Last-Update: 2019-12-06
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/plugins/gstreamer/camerabin/camerabinrecorder.cpp
++++ b/src/plugins/gstreamer/camerabin/camerabinrecorder.cpp
+@@ -68,10 +68,13 @@
+         connect(qApp, SIGNAL(applicationStateChanged(Qt::ApplicationState)),
+                 this, SLOT(handleApplicationStateChanged(Qt::ApplicationState)));
+     }
++
++    m_session->bus()->installMessageFilter(this);
+ }
+ 
+ CameraBinRecorder::~CameraBinRecorder()
+ {
++    m_session->bus()->removeMessageFilter(this);
+ }
+ 
+ QUrl CameraBinRecorder::outputLocation() const
+@@ -310,5 +313,44 @@
+         setState(QMediaRecorder::StoppedState);
+ }
+ 
++// This prefix is known, as camerabinsession doesn't set its own audio source,
++// the name of `autoaudiosrc` created by `camerabin` is fixed, and the way
++// `gstautodetect` creates this prefix is known.
++#define AUDIO_SRC_PREFIX "audiosrc-actual-src-"
++
++bool CameraBinRecorder::processBusMessage(const QGstreamerMessage &message)
++{
++    if (m_state == QMediaRecorder::StoppedState)
++        return false;
++
++    GstMessage* gm = message.rawMessage();
++
++    if (!gm)
++        return false;
++
++    if (GST_MESSAGE_TYPE(gm) == GST_MESSAGE_ERROR) {
++        GError *err;
++        gchar *debug;
++        gst_message_parse_error (gm, &err, &debug);
++
++        // Catch errors from the audio source element. Camera-related or
++        // camerabin's error will be caught in camerabinsession.cpp.
++        if (err && err->message && strncmp(GST_OBJECT_NAME(GST_MESSAGE_SRC(gm)),
++                AUDIO_SRC_PREFIX, sizeof(AUDIO_SRC_PREFIX) - 1) == 0) {
++            qWarning() << "Error in audio recording:" << err->message;
++            emit error(QMediaRecorder::ResourceError, tr("Error in audio recording."));
++            setState(QMediaRecorder::StoppedState);
++        }
++
++        if (err)
++            g_error_free (err);
++
++        if (debug)
++            g_free (debug);
++    }
++
++    return false;
++}
++
+ QT_END_NAMESPACE
+ 
+--- a/src/plugins/gstreamer/camerabin/camerabinrecorder.h
++++ b/src/plugins/gstreamer/camerabin/camerabinrecorder.h
+@@ -51,9 +51,11 @@
+ 
+ QT_BEGIN_NAMESPACE
+ 
+-class CameraBinRecorder : public QMediaRecorderControl
++class CameraBinRecorder : public QMediaRecorderControl,
++                          public QGstreamerBusMessageFilter
+ {
+     Q_OBJECT
++    Q_INTERFACES(QGstreamerBusMessageFilter)
+ 
+ public:
+     CameraBinRecorder(CameraBinSession *session);
+@@ -76,6 +78,8 @@
+     GstEncodingContainerProfile *videoProfile();
+ #endif
+ 
++    bool processBusMessage(const QGstreamerMessage &message) override;
++
+ public slots:
+     void setState(QMediaRecorder::State state) override;
+     void setMuted(bool) override;
