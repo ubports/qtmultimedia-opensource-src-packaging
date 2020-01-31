@@ -7,7 +7,8 @@ Instead of emitting "currentDigitalZoomChanged", it emits "maximum
 OpticalZoomChanged" signal instead.
 
 Forwarded: https://git.sailfishos.org/mer-core/qtmultimedia/merge_requests/29
-Last-Update: 2019-10-10
+Applied-Upstream: mer/5.6.2+git17, https://git.sailfishos.org/mer-core/qtmultimedia/commit/aac37409090f2de2cd0f38073130b84d97aaa3f0
+Last-Update: 2020-01-31
 --- a/src/plugins/gstreamer/camerabin/camerabinzoom.cpp
 +++ b/src/plugins/gstreamer/camerabin/camerabinzoom.cpp
 @@ -139,7 +139,7 @@
