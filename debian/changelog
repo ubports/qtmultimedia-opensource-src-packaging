@@ -1,3 +1,8 @@
+qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid7) UNRELEASED; urgency=medium
+
+
+ -- Ratchanan Srirattanamet <ratchanan@ubports.com>  Fri, 31 Jan 2020 16:51:36 +0700
+
 qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid6) xenial; urgency=medium
 
   * Fix silent error when the app is denied microphone permission
