@@ -12,10 +12,10 @@ Last-Update: 2019-12-06
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 --- a/src/plugins/gstreamer/camerabin/camerabinrecorder.cpp
 +++ b/src/plugins/gstreamer/camerabin/camerabinrecorder.cpp
-@@ -68,10 +68,13 @@
-         connect(qApp, SIGNAL(applicationStateChanged(Qt::ApplicationState)),
-                 this, SLOT(handleApplicationStateChanged(Qt::ApplicationState)));
-     }
+@@ -62,10 +62,13 @@
+     connect(m_session, SIGNAL(mutedChanged(bool)), this, SIGNAL(mutedChanged(bool)));
+     connect(m_session->cameraControl()->resourcePolicy(), SIGNAL(canCaptureChanged()),
+             this, SLOT(updateStatus()));
 +
 +    m_session->bus()->installMessageFilter(this);
  }
@@ -26,8 +26,8 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
  }
  
  QUrl CameraBinRecorder::outputLocation() const
-@@ -310,5 +313,44 @@
-         setState(QMediaRecorder::StoppedState);
+@@ -294,5 +297,44 @@
+         qWarning() << "Media service doesn't support recorder audio gain.";
  }
  
 +// This prefix is known, as camerabinsession doesn't set its own audio source,

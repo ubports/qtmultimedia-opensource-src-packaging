@@ -125,10 +125,10 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
  
  
  QT_BEGIN_NAMESPACE
-@@ -62,6 +63,11 @@
-     connect(m_session, SIGNAL(mutedChanged(bool)), this, SIGNAL(mutedChanged(bool)));
-     connect(m_session->cameraControl()->resourcePolicy(), SIGNAL(canCaptureChanged()),
+@@ -64,6 +65,11 @@
              this, SLOT(updateStatus()));
+ 
+     m_session->bus()->installMessageFilter(this);
 +
 +    if (qApp) {
 +        connect(qApp, SIGNAL(applicationStateChanged(Qt::ApplicationState)),
@@ -137,8 +137,8 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
  }
  
  CameraBinRecorder::~CameraBinRecorder()
-@@ -294,5 +300,15 @@
-         qWarning() << "Media service doesn't support recorder audio gain.";
+@@ -336,5 +342,15 @@
+     return false;
  }
  
 +void CameraBinRecorder::handleApplicationStateChanged(Qt::ApplicationState appState) {
@@ -155,7 +155,7 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
  
 --- a/src/plugins/gstreamer/camerabin/camerabinrecorder.h
 +++ b/src/plugins/gstreamer/camerabin/camerabinrecorder.h
-@@ -83,6 +83,9 @@
+@@ -87,6 +87,9 @@
  
      void updateStatus();
  
