@@ -1,3 +1,8 @@
+qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid8) UNRELEASED; urgency=medium
+
+
+ -- Ratchanan Srirattanamet <ratchanan@ubports.com>  Mon, 02 Mar 2020 22:03:28 +0700
+
 qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid7) xenial; urgency=medium
 
   * Update 0205-Gstreamer-correct-signal-name-in-CameraBinZoom-updateMaxZoom
