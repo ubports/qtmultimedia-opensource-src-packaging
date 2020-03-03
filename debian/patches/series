@@ -28,4 +28,5 @@ ubports/0211-Gstreamer-refactor-how-focus-point-setting-works.patch
 ubports/0212-Gstreamer-fix-camerabin-s-supported-focus-point-mode.patch
 ubports/0213-Gstreamer-stop-video-recording-on-audiosrc-error.patch
 ubports/0214-Ubuntu-Touch-stop-the-camera-when-application-becomes-inactive.patch
+ubports/0215-CameraBin-unset-GValues-after-finish-using-them.patch
 sync-headers.patch
