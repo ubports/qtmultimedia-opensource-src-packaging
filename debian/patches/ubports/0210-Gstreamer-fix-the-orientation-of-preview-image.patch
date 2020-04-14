@@ -12,20 +12,101 @@ Last-Update: 2019-10-15
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 --- a/src/plugins/gstreamer/camerabin/camerabinsession.cpp
 +++ b/src/plugins/gstreamer/camerabin/camerabinsession.cpp
-@@ -1091,6 +1091,16 @@
+@@ -79,6 +79,8 @@
+ 
+ #include <QtGui/qimage.h>
+ #include <QtCore/qdatetime.h>
++#include <QtCore/qrunnable.h>
++#include <QtCore/qthreadpool.h>
+ 
+ //#define CAMERABIN_DEBUG 1
+ //#define CAMERABIN_DEBUG_DUMP_BIN 1
+@@ -115,6 +117,33 @@
+ #define PREVIEW_CAPS_4_3 \
+     "video/x-raw-rgb, width = (int) 640, height = (int) 480"
+ 
++namespace {
++    class RotateRunnable : public QObject, public QRunnable {
++        Q_OBJECT
++
++    public:
++        RotateRunnable(QImage const && image, int rotation)
++            : m_image{image}, m_rotation{rotation} {}
++        ~RotateRunnable() = default;
++
++        void run() override
++        {
++            QTransform rotateTransform;
++            rotateTransform.rotate(m_rotation);
++            m_image = m_image.transformed(rotateTransform, Qt::FastTransformation);
++
++            emit rotatedImage(m_image);
++        }
++
++    private:
++        QImage m_image;
++        int m_rotation;
++
++    signals:
++        void rotatedImage(const QImage &img);
++    };
++}
++
+ QT_BEGIN_NAMESPACE
+ 
+ CameraBinSession::CameraBinSession(GstElementFactory *sourceFactory, QObject *parent)
+@@ -1090,18 +1119,43 @@
+             image = QGstUtils::bufferToImage(buffer);
              gst_buffer_unref(buffer);
  #endif
-             if (!image.isNull()) {
-+                if (m_metaData.contains(GST_TAG_IMAGE_ORIENTATION)) {
-+                    int orientation = QGstUtils::fromGStreamerOrientation(
-+                        m_metaData.value(GST_TAG_IMAGE_ORIENTATION)).toInt();
-+                    if (orientation != 0) {
-+                        QTransform rotateTransform;
-+                        rotateTransform.rotate(360 - orientation);
-+                        image = image.transformed(rotateTransform, Qt::FastTransformation);
-+                    }
-+                }
+-            if (!image.isNull()) {
+-                static QMetaMethod exposedSignal = QMetaMethod::fromSignal(&CameraBinSession::imageExposed);
+-                exposedSignal.invoke(this,
+-                                     Qt::QueuedConnection,
+-                                     Q_ARG(int,m_requestId));
+ 
++            if (image.isNull())
++                return true;
 +
-                 static QMetaMethod exposedSignal = QMetaMethod::fromSignal(&CameraBinSession::imageExposed);
-                 exposedSignal.invoke(this,
-                                      Qt::QueuedConnection,
++            static QMetaMethod exposedSignal = QMetaMethod::fromSignal(&CameraBinSession::imageExposed);
++            exposedSignal.invoke(this,
++                                 Qt::QueuedConnection,
++                                 Q_ARG(int,m_requestId));
++
++            bool rotationDone = false;
++
++            if (m_metaData.contains(GST_TAG_IMAGE_ORIENTATION)) {
++                int orientation = QGstUtils::fromGStreamerOrientation(
++                        m_metaData.value(GST_TAG_IMAGE_ORIENTATION)).toInt();
++                if (orientation != 0) {
++                    auto rotateRunnable = new RotateRunnable(
++                                                std::move(image),
++                                                /* rotation */ 360 - orientation);
++                    // This ensures safety in case the session is deleted before the task finished.
++                    connect(rotateRunnable, &RotateRunnable::rotatedImage, this, [this] (const QImage &img) {
++                        emit imageCaptured(m_requestId, img);
++                    });
++                    // Because of autoDelete, we can leave deleting rotateRunnable to QThreadPool.
++                    QThreadPool::globalInstance()->start(rotateRunnable);
++
++                    rotationDone = true;
++                }
++            }
++
++            if (!rotationDone) {
+                 static QMetaMethod capturedSignal = QMetaMethod::fromSignal(&CameraBinSession::imageCaptured);
+                 capturedSignal.invoke(this,
+                                       Qt::QueuedConnection,
+                                       Q_ARG(int,m_requestId),
+                                       Q_ARG(QImage,image));
+             }
++
+             return true;
+         }
+ #if QT_CONFIG(gstreamer_photography)
+@@ -1656,3 +1710,5 @@
+ }
+ 
+ QT_END_NAMESPACE
++
++#include "camerabinsession.moc"
