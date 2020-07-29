@@ -30,4 +30,5 @@ ubports/0213-Gstreamer-stop-video-recording-on-audiosrc-error.patch
 ubports/0214-Ubuntu-Touch-stop-the-camera-when-application-becomes-inactive.patch
 ubports/0215-CameraBin-unset-GValues-after-finish-using-them.patch
 ubports/0216-CameraBin-support-FlashVideoLight-flash-mode.patch
+ubports/0217-QGstUtils-dont-set-element-to-ready-to-get-orientation.patch
 sync-headers.patch

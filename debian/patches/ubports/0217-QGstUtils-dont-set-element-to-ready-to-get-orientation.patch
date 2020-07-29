@@ -1,0 +1,34 @@
+Description: QGstUtils: don't set element to ready to get orientation
+ Camera source should have its infos like orientation available without
+ going to READY state. In fact, going to READY state should means
+ actually the camera. Thus, I've patched gst-droid to make it possible
+ to query orientation in NULL state. That's what gstahc (upstream plugin
+ for Android camera) does too.
+ .
+ We cannot upstream this patch until we get this behavior on gst-droid
+ upstream.
+Author: Ratchanan Srirattanamet <ratchanan@ubports.com>
+Forwarded: no
+Last-Update: 2020-07-29
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/gsttools/qgstutils.cpp
++++ b/src/gsttools/qgstutils.cpp
+@@ -596,16 +596,13 @@
+                         ? gst_element_factory_create(factory, 0)
+                         : 0;
+                 if (camera) {
+-                    if (gst_element_set_state(camera, GST_STATE_READY) != GST_STATE_CHANGE_SUCCESS) {
+-                        // no-op
+-                    } else for (int i = 0; i < 2; ++i) {
++                    for (int i = 0; i < 2; ++i) {
+                         gint orientation = 0;
+                         g_object_set(G_OBJECT(camera), "camera-device", i, NULL);
+                         g_object_get(G_OBJECT(camera), "sensor-mount-angle", &orientation, NULL);
+ 
+                         devices[i].orientation = (720 - orientation) % 360;
+                     }
+-                    gst_element_set_state(camera, GST_STATE_NULL);
+                     gst_object_unref(GST_OBJECT(camera));
+ 
+                 }
