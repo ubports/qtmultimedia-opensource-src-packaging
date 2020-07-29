@@ -126,21 +126,21 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
  
  
  QT_BEGIN_NAMESPACE
-@@ -52,7 +53,9 @@
-     :QMediaRecorderControl(session),
+@@ -53,7 +54,9 @@
       m_session(session),
       m_state(QMediaRecorder::StoppedState),
--     m_status(QMediaRecorder::UnloadedStatus)
-+     m_status(QMediaRecorder::UnloadedStatus),
+      m_status(QMediaRecorder::UnloadedStatus),
+-     m_busHelper(session->bus())
++     m_busHelper(session->bus()),
 +     m_awaitingAudioBuffer(false),
 +     m_audioBufferProbe(this)
  {
      connect(m_session, SIGNAL(statusChanged(QCamera::Status)), SLOT(updateStatus()));
      connect(m_session, SIGNAL(pendingStateChanged(QCamera::State)), SLOT(updateStatus()));
-@@ -64,6 +67,11 @@
+@@ -65,6 +68,11 @@
              this, SLOT(updateStatus()));
  
-     m_session->bus()->installMessageFilter(this);
+     m_busHelper->installMessageFilter(this);
 +
 +    if (qApp) {
 +        connect(qApp, SIGNAL(applicationStateChanged(Qt::ApplicationState)),
@@ -149,7 +149,7 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
  }
  
  CameraBinRecorder::~CameraBinRecorder()
-@@ -251,6 +259,7 @@
+@@ -253,6 +261,7 @@
          m_state = state;
          m_status = QMediaRecorder::FinalizingStatus;
          m_session->stopVideoRecording();
@@ -157,7 +157,7 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
          break;
      case QMediaRecorder::PausedState:
          emit error(QMediaRecorder::ResourceError, tr("QMediaRecorder::pause() is not supported by camerabin2."));
-@@ -266,6 +275,7 @@
+@@ -268,6 +277,7 @@
              m_state = state;
              m_status = QMediaRecorder::RecordingStatus;
              emit actualLocationChanged(m_session->outputLocation());
@@ -165,7 +165,7 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
          }
      }
  
-@@ -336,5 +346,82 @@
+@@ -340,5 +350,82 @@
      return false;
  }
  
@@ -250,7 +250,7 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
  
 --- a/src/plugins/gstreamer/camerabin/camerabinrecorder.h
 +++ b/src/plugins/gstreamer/camerabin/camerabinrecorder.h
-@@ -87,10 +87,33 @@
+@@ -88,6 +88,9 @@
  
      void updateStatus();
  
@@ -260,7 +260,10 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
  private:
      CameraBinSession *m_session;
      QMediaRecorder::State m_state;
-     QMediaRecorder::Status m_status;
+@@ -96,6 +99,26 @@
+      * we keep a weak pointer reference ourself so that we don't depend on
+      * destruction order. */
+     QPointer<QGstreamerBusHelper> m_busHelper;
 +
 +    // Might be accessed from the main thread or the probe.
 +    QAtomicInteger<bool> m_awaitingAudioBuffer;
