@@ -1,7 +1,25 @@
-qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid8) UNRELEASED; urgency=medium
+qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid8) xenial; urgency=medium
 
+  * Fix memory leak in CameraBin
+    - d/p/ubports/0215-CameraBin-unset-GValue-after-finish-using-it.patch
+  * Update 0210-Gstreamer-fix-the-orientation-of-preview-image.patch
+    - Move the rotation to a runable and run it in a worker thread. This
+      prevents blocking the Gstreamer bus's thread too much.
+  * Support FlashVideoLight flash mode, used by UT apps
+  * Speed up camera init by not set element to READY for orientation
+    - 0217-QGstUtils-dont-set-element-to-ready-to-get-orientation.patch
+  * Update 0213-Gstreamer-stop-video-recording-on-audiosrc-error.patch
+    - Uses a weak pointer to store bus helper. On destruction, it may not
+      safe to access m_session->bus() because we may be destructed before
+      or after it. Keeping it in our own weak pointer so that we don't
+      depend on destruction order.
+    - Also reload the camera on failure. Gst-droid seems to work incorrectly
+      after stoping the recording following the error. Reloading the
+      pipeline seems to fix it.
+  * Refresh 0214-Ubuntu-Touch-stop-the-camera-when-application-become.patch.
+    Due to previous commit. Also rename it to be shorter.
 
- -- Ratchanan Srirattanamet <ratchanan@ubports.com>  Mon, 02 Mar 2020 22:03:28 +0700
+ -- Ratchanan Srirattanamet <ratchanan@ubports.com>  Thu, 30 Jul 2020 00:34:25 +0700
 
 qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid7) xenial; urgency=medium
 
