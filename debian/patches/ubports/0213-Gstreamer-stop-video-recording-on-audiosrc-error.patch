@@ -12,21 +12,32 @@ Last-Update: 2019-12-06
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 --- a/src/plugins/gstreamer/camerabin/camerabinrecorder.cpp
 +++ b/src/plugins/gstreamer/camerabin/camerabinrecorder.cpp
-@@ -62,10 +62,13 @@
+@@ -52,7 +52,8 @@
+     :QMediaRecorderControl(session),
+      m_session(session),
+      m_state(QMediaRecorder::StoppedState),
+-     m_status(QMediaRecorder::UnloadedStatus)
++     m_status(QMediaRecorder::UnloadedStatus),
++     m_busHelper(session->bus())
+ {
+     connect(m_session, SIGNAL(statusChanged(QCamera::Status)), SLOT(updateStatus()));
+     connect(m_session, SIGNAL(pendingStateChanged(QCamera::State)), SLOT(updateStatus()));
+@@ -62,10 +63,14 @@
      connect(m_session, SIGNAL(mutedChanged(bool)), this, SIGNAL(mutedChanged(bool)));
      connect(m_session->cameraControl()->resourcePolicy(), SIGNAL(canCaptureChanged()),
              this, SLOT(updateStatus()));
 +
-+    m_session->bus()->installMessageFilter(this);
++    m_busHelper->installMessageFilter(this);
  }
  
  CameraBinRecorder::~CameraBinRecorder()
  {
-+    m_session->bus()->removeMessageFilter(this);
++    if (m_busHelper)
++        m_busHelper->removeMessageFilter(this);
  }
  
  QUrl CameraBinRecorder::outputLocation() const
-@@ -294,5 +297,44 @@
+@@ -294,5 +299,46 @@
          qWarning() << "Media service doesn't support recorder audio gain.";
  }
  
@@ -57,6 +68,8 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 +            qWarning() << "Error in audio recording:" << err->message;
 +            emit error(QMediaRecorder::ResourceError, tr("Error in audio recording."));
 +            setState(QMediaRecorder::StoppedState);
++            // Reload the pipeline to make sure everything is working correctly.
++            m_session->cameraControl()->reloadLater();
 +        }
 +
 +        if (err)
@@ -73,7 +86,15 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
  
 --- a/src/plugins/gstreamer/camerabin/camerabinrecorder.h
 +++ b/src/plugins/gstreamer/camerabin/camerabinrecorder.h
-@@ -51,9 +51,11 @@
+@@ -41,6 +41,7 @@
+ #ifndef CAMERABINRECORDERCONTROL_H
+ #define CAMERABINRECORDERCONTROL_H
+ 
++#include <QtCore/QPointer>
+ #include <QtMultimedia/private/qtmultimediaglobal_p.h>
+ #include <qmediarecordercontrol.h>
+ #include "camerabinsession.h"
+@@ -51,9 +52,11 @@
  
  QT_BEGIN_NAMESPACE
  
@@ -86,7 +107,7 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
  
  public:
      CameraBinRecorder(CameraBinSession *session);
-@@ -76,6 +78,8 @@
+@@ -76,6 +79,8 @@
      GstEncodingContainerProfile *videoProfile();
  #endif
  
@@ -95,3 +116,14 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
  public slots:
      void setState(QMediaRecorder::State state) override;
      void setMuted(bool) override;
+@@ -87,6 +92,10 @@
+     CameraBinSession *m_session;
+     QMediaRecorder::State m_state;
+     QMediaRecorder::Status m_status;
++    /* It might be not safe to access m_session->bus() during destruction, so
++     * we keep a weak pointer reference ourself so that we don't depend on
++     * destruction order. */
++    QPointer<QGstreamerBusHelper> m_busHelper;
+ };
+ 
+ QT_END_NAMESPACE
