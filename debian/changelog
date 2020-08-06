@@ -1,3 +1,9 @@
+qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid9) UNRELEASED; urgency=medium
+
+  * 
+
+ -- Ratchanan Srirattanamet <ratchanan@ubports.com>  Fri, 07 Aug 2020 01:21:49 +0700
+
 qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid8) xenial; urgency=medium
 
   * Fix memory leak in CameraBin
