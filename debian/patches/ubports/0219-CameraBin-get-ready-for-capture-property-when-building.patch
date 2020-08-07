@@ -1,0 +1,31 @@
+Description: CameraBin: get ready-for-capture property when building camera source.
+ Our m_readyToCapture starts out as false and is updated only when
+ cameraSrc emit ready-for-capture notify. However, some source, like
+ wrappercamerabinsrc, have its ready-for-capture starts as 1 and will
+ not fire the notify until a capture happens. That means we'll be unable
+ to capture at all.
+ .
+ This patch sync up the value at the time the source is built, so that
+ we'll be able to capture.
+Author: Ratchanan Srirattanamet <ratchanan@ubports.com>
+Bug-UBports: https://gitlab.com/ubports/community-ports/pinephone/-/issues/37
+Forwarded: no
+Last-Update: 2020-08-08
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/plugins/gstreamer/camerabin/camerabinsession.cpp
++++ b/src/plugins/gstreamer/camerabin/camerabinsession.cpp
+@@ -576,6 +576,13 @@
+ 
+     if (m_cameraSrc != camSrc) {
+         g_object_set(G_OBJECT(m_camerabin), CAMERA_SOURCE_PROPERTY, m_cameraSrc, NULL);
++
++        int ready_for_capture;
++        g_object_get(G_OBJECT(m_cameraSrc), "ready-for-capture", &ready_for_capture, NULL);
++        m_readyForCapture = ready_for_capture;
++        // For completeness. Although at this stage we won't be able to capture anyway.
++        QMetaObject::invokeMethod(this, "handleReadyForCaptureChanged",
++                                  Qt::QueuedConnection, Q_ARG(bool, m_readyForCapture));
+         g_signal_connect(G_OBJECT(m_cameraSrc), "notify::ready-for-capture", G_CALLBACK(updateReadyForCapture), this);
+ 
+         GstPad *vfsrc_pad = gst_element_get_static_pad(m_cameraSrc, "vfsrc");

@@ -1,0 +1,55 @@
+Description: QGstUtils: support setting V4L2 camera orientation from env var
+ UBports wants to utilise PinePhone's camera via GStreamer's V4L2 plugin.
+ However, there's no way to provide the orientation of the camera to the
+ app. Thus, I write a code to read it from environment variable.
+ .
+ In a long term, I guess we could write an element that wraps wrapper-
+ camerabinsrc and provide the orientation & other features (i.e. flash,
+ camera switching).
+Author: Ratchanan Srirattanamet <ratchanan@ubports.com>
+Bug-UBports: https://gitlab.com/ubports/community-ports/pinephone/-/issues/37
+Forwarded: not-needed
+Last-Update: 2020-08-08
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/gsttools/qgstutils.cpp
++++ b/src/gsttools/qgstutils.cpp
+@@ -551,6 +551,22 @@
+ 
+ Q_GLOBAL_STATIC(FactoryCameraInfoMap, qt_camera_device_info);
+ 
++int readAndValidateCamOrientationEnv() {
++    int orientation = qEnvironmentVariableIntValue("QT_GSTREAMER_UBPORTS_CAM_ORIENTATION");
++    switch (orientation) {
++        case 0:
++        case 90:
++        case 180:
++        case 270:
++            return orientation;
++
++        default:
++            qWarning() << "Invalid camera orientation" << orientation
++                       << "specified in the environment variable.";
++            return 0;
++    }
++}
++
+ }
+ 
+ QVector<QGstUtils::CameraInfo> QGstUtils::enumerateCameras(GstElementFactory *factory)
+@@ -662,11 +678,14 @@
+             }
+             //qDebug() << "found camera: " << name;
+ 
++            // Only lookup the env when at least 1 cam is found.
++            // Defaults to 0 so shouldn't cause problem when not set.
++            static int camOrientation = readAndValidateCamOrientationEnv();
+ 
+             CameraInfo device = {
+                 entryInfo.absoluteFilePath(),
+                 name,
+-                0,
++                camOrientation,
+                 QCamera::UnspecifiedPosition,
+                 driver
+             };
