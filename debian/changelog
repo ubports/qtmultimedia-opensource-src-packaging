@@ -1,8 +1,10 @@
-qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid9) UNRELEASED; urgency=medium
+qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid9) xenial; urgency=medium
 
-  * 
+  * Add patches to enable very basic PinePhone camera support
+    - 0218-QGstUtils-support-setting-V4L2-camera-orientation-from.patch
+    - 0219-CameraBin-get-ready-for-capture-property-when-building.patch
 
- -- Ratchanan Srirattanamet <ratchanan@ubports.com>  Fri, 07 Aug 2020 01:21:49 +0700
+ -- Ratchanan Srirattanamet <ratchanan@ubports.com>  Mon, 10 Aug 2020 20:43:41 +0700
 
 qtmultimedia-opensource-src (5.9.5-0ubports2~gstdroid8) xenial; urgency=medium
 
